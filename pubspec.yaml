@@ -1,0 +1,64 @@
+name: beauty_master
+description: "Beauty Master App"
+# The following line prevents the package from being accidentally published to
+# pub.dev using `flutter pub publish`. This is preferred for private packages.
+publish_to: 'none' # Remove this line if you wish to publish to pub.dev
+
+version: 1.0.0+1
+
+environment:
+  sdk: ^3.7.0
+
+dependencies:
+  flutter:
+    sdk: flutter
+  flutter_localizations:
+    sdk: flutter
+  cupertino_icons: ^1.0.8
+  freezed_annotation: ^2.4.4
+  json_annotation: ^4.9.0
+  flutter_bloc: ^9.1.0
+  dio: ^5.7.0
+  retrofit: ^4.4.2
+  flutter_secure_storage: ^9.2.2
+  rxdart: ^0.28.0
+  auto_route: ^9.3.0+1
+  intl:
+  intl_phone_field: ^3.2.0
+  flutter_otp_text_field: ^1.4.0+2
+  flutter_svg: ^2.0.17
+  sliver_tools: ^0.2.12
+  url_launcher: ^6.3.1
+  provider: ^6.1.2
+  decimal:
+  flutter_map: ^8.1.0
+  cached_network_image: ^3.4.1
+  geolocator: ^13.0.2
+  latlong2:
+  collection: ^1.19.1
+  mask_text_input_formatter: ^2.9.0
+  google_fonts: ^6.2.1
+  bloc_concurrency: ^0.3.0
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+
+  flutter_lints: ^5.0.0
+  build_runner: ^2.4.14
+  json_serializable:
+  freezed: ^2.5.7
+  auto_route_generator: ^9.3.0+1
+  retrofit_generator: ^9.0.0
+
+flutter:
+  uses-material-design: true
+  generate: true
+
+  assets:
+    - assets/
+    - assets/icons/
+
+flutter_intl:
+  enabled: true
+  main_locale: ru

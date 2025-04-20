@@ -1,0 +1,49 @@
+import 'package:beauty_master/data/api/beauty_client.dart';
+import 'package:beauty_master/data/event/order_changed_event_bus.dart';
+import 'package:beauty_master/data/models/requests/update_record_request.dart';
+import 'package:beauty_master/domain/models/calendar_day_status.dart';
+import 'package:beauty_master/domain/models/order.dart';
+import 'package:beauty_master/domain/repositories/order_repository.dart';
+
+class OrderRepositoryImpl implements OrderRepository {
+  final BeautyClient _client;
+  final OrderChangedEventBus _orderChangedEventBus;
+
+  OrderRepositoryImpl(this._client, this._orderChangedEventBus);
+
+  @override
+  Future<Order> getOrder(String id) async {
+    final order = await _client.getOrder(id);
+    _orderChangedEventBus.emit(order);
+    return order;
+  }
+
+  @override
+  Future<List<Order>> getOrders({required int limit, required int offset, DateTime? date}) =>
+      _client.getOrders(limit: limit, offset: offset, date: date);
+
+  @override
+  Stream<Order> watchOrderChangedEvent() => _orderChangedEventBus.stream;
+
+  @override
+  Future<CalendarMonthStatus> getWorkload(DateTime  month) async {
+    final year = month.year;
+    final monthNumber = month.month;
+    final workloads = await _client.getWorkload(year, monthNumber);
+    final CalendarMonthStatus monthStatus = {};
+    for (final workload in workloads) {
+      monthStatus[workload.day] = workload.status;
+    }
+    return monthStatus;
+  }
+
+  @override
+  Future<void> approveOrder(String id) async {
+    await _client.updateOrder(UpdateRecordRequest(recordId: id, status: OrderStatus.approved));
+  }
+
+  @override
+  Future<void> discardOrder({required String id, required String reason}) {
+    return _client.updateOrder(UpdateRecordRequest(recordId: id, status: OrderStatus.discarded));
+  }
+}
