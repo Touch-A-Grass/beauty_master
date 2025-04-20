@@ -12,5 +12,9 @@ abstract interface class OrderRepository {
 
   Future<void> discardOrder({required String id, required String reason});
 
+  Future<void> completeOrder(String id);
+
+  Future<void> changeOrderTime({required String id, required DateTime time, required DateTime endTime});
+
   Stream<Order> watchOrderChangedEvent();
 }

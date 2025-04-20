@@ -6,7 +6,13 @@ part 'update_record_request.g.dart';
 
 @freezed
 class UpdateRecordRequest with _$UpdateRecordRequest {
-  const factory UpdateRecordRequest({required String recordId, OrderStatus? status}) = _UpdateRecordRequest;
+  const factory UpdateRecordRequest({
+    required String recordId,
+    OrderStatus? status,
+    String? comment,
+    DateTime? startTimestamp,
+    DateTime? endTimestamp,
+  }) = _UpdateRecordRequest;
 
   factory UpdateRecordRequest.fromJson(Map<String, dynamic> json) => _$UpdateRecordRequestFromJson(json);
 }

@@ -26,7 +26,7 @@ class OrdersWidget extends StatefulWidget {
 }
 
 class _OrdersWidgetState extends State<OrdersWidget> {
-  final selectedDateFormat = DateFormat('dd MMMM');
+  final selectedDateFormat = DateFormat('d MMMM');
 
   @override
   Widget build(BuildContext context) {
@@ -97,7 +97,7 @@ class _OrdersWidgetState extends State<OrdersWidget> {
                                           context.pushRoute(OrderDetailsRoute(orderId: state.orders.data[index].id));
                                         },
                                       ),
-                                  separatorBuilder: (context, index) => const Divider(),
+                                  separatorBuilder: (context, index) => const SizedBox(height: 16),
                                   itemCount: state.orders.data.length,
                                 ),
                               ),

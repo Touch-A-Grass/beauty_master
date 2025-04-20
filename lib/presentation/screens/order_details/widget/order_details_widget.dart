@@ -1,6 +1,7 @@
 import 'package:beauty_master/domain/models/order.dart';
 import 'package:beauty_master/generated/l10n.dart';
 import 'package:beauty_master/presentation/components/error_snackbar.dart';
+import 'package:beauty_master/presentation/components/select_timeslot_sheet.dart';
 import 'package:beauty_master/presentation/models/order_status.dart';
 import 'package:beauty_master/presentation/screens/order_details/bloc/order_details_bloc.dart';
 import 'package:beauty_master/presentation/util/bloc_single_change_listener.dart';
@@ -67,6 +68,14 @@ class _OrderDetailsWidgetState extends State<OrderDetailsWidget> {
                                                     Divider(),
                                                     _OrderInfoItem(Text(S.of(context).venue), Text(order.venue.name)),
                                                     Divider(),
+                                                    if (order.status == OrderStatus.discarded &&
+                                                        order.comment.isNotEmpty) ...[
+                                                      _OrderInfoItem(
+                                                        Text(S.of(context).orderCancelReasonTitle),
+                                                        Expanded(child: Text(order.comment, textAlign: TextAlign.end)),
+                                                      ),
+                                                      Divider(),
+                                                    ],
                                                     _OrderTimeInfo(order: order),
                                                     if (order.service.duration != null) ...[
                                                       Divider(),
@@ -107,6 +116,13 @@ class _OrderDetailsWidgetState extends State<OrderDetailsWidget> {
                                               ),
                                             ),
                                           ),
+                                          if (state.canChangeTime)
+                                            SliverPadding(
+                                              padding: const EdgeInsets.only(top: 16),
+                                              sliver: SliverMainAxisGroup(
+                                                slivers: [SliverToBoxAdapter(child: _ChangeTimeButton(state))],
+                                              ),
+                                            ),
                                         ],
                                       ),
                                     ),
@@ -122,13 +138,8 @@ class _OrderDetailsWidgetState extends State<OrderDetailsWidget> {
                                               spacing: 16,
                                               children: [
                                                 if (state.canDiscardOrder) Expanded(child: _DiscardButton(state)),
-                                                if (state.canApproveOrder)
-                                                  Expanded(
-                                                    child: SizedBox(
-                                                      height: 48,
-                                                      child: FilledButton(onPressed: () {}, child: Text('Подтвердить')),
-                                                    ),
-                                                  ),
+                                                if (state.canApproveOrder) Expanded(child: _ApproveButton(state)),
+                                                if (state.canCompleteOrder) Expanded(child: _CompleteButton(state)),
                                               ],
                                             ),
                                           ),
@@ -155,6 +166,43 @@ class _OrderDetailsWidgetState extends State<OrderDetailsWidget> {
   }
 }
 
+class _ChangeTimeButton extends StatelessWidget {
+  final OrderDetailsState state;
+
+  const _ChangeTimeButton(this.state);
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      height: 48,
+      child: OutlinedButton(
+        onPressed:
+            state.timeSlots != null && state.changingTimeSlotState is InitialOrderUpdatingState
+                ? () async {
+                  final date = await showModalBottomSheet(
+                    context: context,
+                    backgroundColor: Colors.transparent,
+                    useSafeArea: true,
+                    isScrollControlled: true,
+                    builder:
+                        (childContext) =>
+                            SelectTimeslotSheet(timeSlots: state.timeSlots ?? [], service: state.order!.service),
+                  );
+
+                  if (context.mounted && date != null) {
+                    context.read<OrderDetailsBloc>().add(OrderDetailsEvent.changeTimeSlotRequested(date));
+                  }
+                }
+                : null,
+        child:
+            state.changingTimeSlotState is InitialOrderUpdatingState && state.timeSlots != null
+                ? Text('Перенести запись')
+                : Center(child: CircularProgressIndicator()),
+      ),
+    );
+  }
+}
+
 class _DiscardButton extends StatelessWidget {
   final OrderDetailsState state;
 
@@ -166,20 +214,127 @@ class _DiscardButton extends StatelessWidget {
       height: 48,
       child: OutlinedButton(
         onPressed:
-            state.discardingState is InitialOrderDiscardingState
+            state.discardingState is InitialOrderUpdatingState
                 ? () async {
-                  final result = await showDialog<bool>(context: context, builder: (context) => _DiscardDialog());
-                  if (context.mounted && result == true) {
-                    context.read<OrderDetailsBloc>().add(const OrderDetailsEvent.discardRequested());
-                  }
+                  await showDialog<bool>(
+                    context: context,
+                    builder:
+                        (childContext) => _DiscardDialog((reason) {
+                          context.read<OrderDetailsBloc>().add(OrderDetailsEvent.discardRequested(reason));
+                        }),
+                  );
                 }
                 : null,
         child: switch (state.discardingState) {
-          InitialOrderDiscardingState() => Text(S.of(context).orderCancelButton),
-          LoadingOrderDiscardingState() => const Center(
+          InitialOrderUpdatingState() => Text(S.of(context).orderCancelButton),
+          LoadingOrderUpdatingState() => Center(
+            child: SizedBox.square(
+              dimension: 24,
+              child: CircularProgressIndicator(color: Theme.of(context).colorScheme.onPrimary),
+            ),
+          ),
+          ErrorOrderUpdatingState s => Text(s.error.message),
+        },
+      ),
+    );
+  }
+}
+
+class _ApproveButton extends StatelessWidget {
+  final OrderDetailsState state;
+
+  const _ApproveButton(this.state);
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      height: 48,
+      child: FilledButton(
+        onPressed:
+            state.confirmingState is InitialOrderUpdatingState
+                ? () async {
+                  final dialog = await showAdaptiveDialog(
+                    context: context,
+                    builder:
+                        (childContext) => AlertDialog(
+                          title: Text(S.of(context).orderApproveDialogTitle),
+                          content: Text(S.of(context).orderApproveDialogMessage),
+                          actionsAlignment: MainAxisAlignment.spaceBetween,
+                          actions: [
+                            TextButton(
+                              onPressed: () => Navigator.pop(childContext, false),
+                              child: Text(S.of(context).dialogNo),
+                            ),
+                            TextButton(
+                              onPressed: () => Navigator.pop(childContext, true),
+                              child: Text(S.of(context).dialogYes),
+                            ),
+                          ],
+                        ),
+                  );
+                  if (dialog == true && context.mounted) {
+                    context.read<OrderDetailsBloc>().add(OrderDetailsEvent.approveRequested());
+                  }
+                }
+                : null,
+        child: switch (state.confirmingState) {
+          InitialOrderUpdatingState() => Text(S.of(context).orderApproveButton),
+          LoadingOrderUpdatingState() => Center(
+            child: SizedBox.square(
+              dimension: 24,
+              child: CircularProgressIndicator(color: Theme.of(context).colorScheme.onPrimary),
+            ),
+          ),
+          ErrorOrderUpdatingState s => Text(s.error.message),
+        },
+      ),
+    );
+  }
+}
+
+class _CompleteButton extends StatelessWidget {
+  final OrderDetailsState state;
+
+  const _CompleteButton(this.state);
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      height: 48,
+      child: FilledButton(
+        onPressed:
+            state.confirmingState is InitialOrderUpdatingState
+                ? () async {
+                  final dialog = await showAdaptiveDialog(
+                    context: context,
+                    builder:
+                        (childContext) => AlertDialog(
+                          title: Text(S.of(context).orderCompleteDialogTitle),
+                          content: Text(S.of(context).orderCompleteDialogMessage),
+                          actionsAlignment: MainAxisAlignment.spaceBetween,
+                          actions: [
+                            TextButton(
+                              onPressed: () => Navigator.pop(childContext, false),
+                              child: Text(S.of(context).dialogNo),
+                            ),
+                            TextButton(
+                              onPressed: () => Navigator.pop(childContext, true),
+                              child: Text(S.of(context).dialogYes),
+                            ),
+                          ],
+                        ),
+                  );
+                  if (dialog == true && context.mounted) {
+                    context.read<OrderDetailsBloc>().add(OrderDetailsEvent.completeRequested());
+                  }
+                }
+                : null,
+        child: switch (state.completingState) {
+          InitialOrderUpdatingState() => Text(S.of(context).orderCompleteButton),
+          LoadingOrderUpdatingState() => const Center(
             child: SizedBox.square(dimension: 24, child: CircularProgressIndicator()),
           ),
-          ErrorOrderDiscardingState s => Text(s.error.message),
+          ErrorOrderUpdatingState s => Text(s.error.message),
         },
       ),
     );
@@ -187,7 +342,9 @@ class _DiscardButton extends StatelessWidget {
 }
 
 class _DiscardDialog extends StatefulWidget {
-  const _DiscardDialog();
+  final ValueChanged<String> onDiscard;
+
+  const _DiscardDialog(this.onDiscard);
 
   @override
   State<_DiscardDialog> createState() => _DiscardDialogState();
@@ -213,6 +370,7 @@ class _DiscardDialogState extends State<_DiscardDialog> {
                   decoration: InputDecoration(border: OutlineInputBorder(), label: Text('Причина отмены')),
                   controller: controller,
                   onChanged: (_) => setState(() {}),
+                  minLines: 1,
                   maxLines: 5,
                 ),
                 Padding(
@@ -221,12 +379,15 @@ class _DiscardDialogState extends State<_DiscardDialog> {
                     spacing: 16,
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      TextButton(
-                        onPressed: () => Navigator.pop(context, true),
-                        child: Text(
-                          S.of(context).orderCancelAlertConfirm,
-                          style: TextStyle(color: Theme.of(context).colorScheme.error),
-                        ),
+                      FilledButton(
+                        onPressed:
+                            controller.text.trim().isEmpty
+                                ? null
+                                : () {
+                                  widget.onDiscard(controller.text.trim());
+                                  Navigator.pop(context, true);
+                                },
+                        child: Text(S.of(context).orderCancelAlertConfirm),
                       ),
                       TextButton(
                         onPressed: () => Navigator.pop(context, false),

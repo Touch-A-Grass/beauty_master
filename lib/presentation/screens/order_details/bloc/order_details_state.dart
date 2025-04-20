@@ -8,20 +8,37 @@ class OrderDetailsState with _$OrderDetailsState {
     Order? order,
     @Default(true) bool isLoadingOrder,
     AppError? loadingOrderError,
-    @Default(OrderDiscardingState.initial()) OrderDiscardingState discardingState,
+    @Default(OrderUpdatingState.initial()) OrderUpdatingState discardingState,
+    @Default(OrderUpdatingState.initial()) OrderUpdatingState confirmingState,
+    @Default(OrderUpdatingState.initial()) OrderUpdatingState completingState,
+    @Default(OrderUpdatingState.initial()) OrderUpdatingState changingTimeSlotState,
+    List<StaffTimeSlot>? timeSlots,
   }) = _OrderDetailsState;
 
-  bool get canDiscardOrder => order?.status == OrderStatus.pending && !isLoadingOrder;
+  bool get canDiscardOrder =>
+      changingTimeSlotState is InitialOrderUpdatingState &&
+      confirmingState is InitialOrderUpdatingState &&
+      (order?.status == OrderStatus.pending || order?.status == OrderStatus.approved) &&
+      !isLoadingOrder;
 
   bool get canApproveOrder =>
-      (order?.status == OrderStatus.pending || order?.status == OrderStatus.discarded) && !isLoadingOrder;
+      changingTimeSlotState is InitialOrderUpdatingState &&
+      discardingState is InitialOrderUpdatingState &&
+      order?.status == OrderStatus.pending &&
+      !isLoadingOrder;
+
+  bool get canCompleteOrder =>
+      discardingState is InitialOrderUpdatingState && order?.status == OrderStatus.approved && !isLoadingOrder;
+
+  bool get canChangeTime =>
+      (order?.status == OrderStatus.pending || order?.status == OrderStatus.approved) && !isLoadingOrder;
 }
 
 @freezed
-sealed class OrderDiscardingState with _$OrderDiscardingState {
-  const factory OrderDiscardingState.initial() = InitialOrderDiscardingState;
+sealed class OrderUpdatingState with _$OrderUpdatingState {
+  const factory OrderUpdatingState.initial() = InitialOrderUpdatingState;
 
-  const factory OrderDiscardingState.loading() = LoadingOrderDiscardingState;
+  const factory OrderUpdatingState.loading() = LoadingOrderUpdatingState;
 
-  const factory OrderDiscardingState.error(AppError error) = ErrorOrderDiscardingState;
+  const factory OrderUpdatingState.error(AppError error) = ErrorOrderUpdatingState;
 }

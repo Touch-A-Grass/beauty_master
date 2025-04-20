@@ -83,7 +83,6 @@ class _OrderListItemState extends State<_OrderListItem> {
                             ),
                           ],
                         ),
-                        if (widget.order.comment.isNotEmpty) Text(S.of(context).orderComment(widget.order.comment)),
                         Row(
                           spacing: 4,
                           children: [

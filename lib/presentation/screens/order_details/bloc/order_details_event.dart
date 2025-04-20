@@ -6,5 +6,13 @@ class OrderDetailsEvent with _$OrderDetailsEvent {
 
   const factory OrderDetailsEvent.orderRequested() = _OrderRequested;
 
-  const factory OrderDetailsEvent.discardRequested() = _DiscardRequested;
+  const factory OrderDetailsEvent.discardRequested(String reason) = _DiscardRequested;
+
+  const factory OrderDetailsEvent.approveRequested() = _ApproveRequested;
+
+  const factory OrderDetailsEvent.completeRequested() = _CompleteRequested;
+
+  const factory OrderDetailsEvent.timeSlotsRequested() = _TimeSlotsRequested;
+
+  const factory OrderDetailsEvent.changeTimeSlotRequested(DateTime date) = _ChangeTimeSlotRequested;
 }

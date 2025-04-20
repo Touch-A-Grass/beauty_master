@@ -13,7 +13,10 @@ class OrderDetailsScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return BlocProvider(
-      create: (context) => OrderDetailsBloc(context.read(), orderId: orderId)..add(OrderDetailsEvent.started()),
+      create:
+          (context) =>
+              OrderDetailsBloc(context.read(), context.read(), context.read(), orderId: orderId)
+                ..add(OrderDetailsEvent.started()),
       child: const OrderDetailsWidget(),
     );
   }

@@ -1,3 +1,4 @@
+import 'package:beauty_master/data/models/dto/staff_time_slot_dto.dart';
 import 'package:beauty_master/data/models/dto/workload_dto.dart';
 import 'package:beauty_master/data/models/requests/send_code_request.dart';
 import 'package:beauty_master/data/models/requests/send_phone_request.dart';
@@ -38,4 +39,10 @@ abstract class BeautyClient {
 
   @PATCH('/staff/record')
   Future<void> updateOrder(@Body() UpdateRecordRequest request);
+
+  @GET('/staff/{id}/schedule')
+  Future<List<StaffTimeSlotDto>> getVenueStaffTimeSlots({
+    @Path('id') required String staffId,
+    @Query('venueId') required String venueId,
+  });
 }

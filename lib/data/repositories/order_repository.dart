@@ -26,7 +26,7 @@ class OrderRepositoryImpl implements OrderRepository {
   Stream<Order> watchOrderChangedEvent() => _orderChangedEventBus.stream;
 
   @override
-  Future<CalendarMonthStatus> getWorkload(DateTime  month) async {
+  Future<CalendarMonthStatus> getWorkload(DateTime month) async {
     final year = month.year;
     final monthNumber = month.month;
     final workloads = await _client.getWorkload(year, monthNumber);
@@ -44,6 +44,16 @@ class OrderRepositoryImpl implements OrderRepository {
 
   @override
   Future<void> discardOrder({required String id, required String reason}) {
-    return _client.updateOrder(UpdateRecordRequest(recordId: id, status: OrderStatus.discarded));
+    return _client.updateOrder(UpdateRecordRequest(recordId: id, status: OrderStatus.discarded, comment: reason));
+  }
+
+  @override
+  Future<void> completeOrder(String id) {
+    return _client.updateOrder(UpdateRecordRequest(recordId: id, status: OrderStatus.completed));
+  }
+
+  @override
+  Future<void> changeOrderTime({required String id, required DateTime time, required DateTime endTime}) {
+    return _client.updateOrder(UpdateRecordRequest(recordId: id, startTimestamp: time, endTimestamp: endTime));
   }
 }

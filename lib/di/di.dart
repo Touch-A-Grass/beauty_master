@@ -4,11 +4,13 @@ import 'package:beauty_master/data/api/dio_factory.dart';
 import 'package:beauty_master/data/event/order_changed_event_bus.dart';
 import 'package:beauty_master/data/repositories/auth_repository.dart';
 import 'package:beauty_master/data/repositories/order_repository.dart';
+import 'package:beauty_master/data/repositories/staff_repository.dart';
 import 'package:beauty_master/data/storage/auth_storage.dart';
 import 'package:beauty_master/data/storage/location_storage.dart';
 import 'package:beauty_master/data/storage/profile_storage.dart';
 import 'package:beauty_master/domain/repositories/auth_repository.dart';
 import 'package:beauty_master/domain/repositories/order_repository.dart';
+import 'package:beauty_master/domain/repositories/staff_repository.dart';
 import 'package:beauty_master/domain/use_cases/logout_use_case.dart';
 import 'package:beauty_master/presentation/navigation/navigation_state_updater.dart';
 import 'package:flutter/material.dart';
@@ -38,6 +40,7 @@ class Di extends StatelessWidget {
           create: (context) => AuthRepositoryImpl(context.read(), context.read(), context.read()),
         ),
         RepositoryProvider<OrderRepository>(create: (context) => OrderRepositoryImpl(context.read(), context.read())),
+        RepositoryProvider<StaffRepository>(create: (context) => StaffRepositoryImpl(context.read())),
         //   Logic
         RepositoryProvider(create: (context) => LogoutUseCase(context.read())),
         ChangeNotifierProvider(create: (context) => NavigationStateUpdater(context.read())),
