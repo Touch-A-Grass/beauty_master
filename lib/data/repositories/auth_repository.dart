@@ -49,4 +49,7 @@ class AuthRepositoryImpl implements AuthRepository {
   Future<StaffProfile> getProfile() async {
     return _profileStorage.value ?? await fetchProfile();
   }
+
+  @override
+  Stream<StaffProfile?> watchProfile() => _profileStorage.stream;
 }

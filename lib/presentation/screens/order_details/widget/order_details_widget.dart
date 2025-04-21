@@ -1,16 +1,21 @@
 import 'package:beauty_master/domain/models/order.dart';
+import 'package:beauty_master/domain/models/user.dart';
 import 'package:beauty_master/generated/l10n.dart';
 import 'package:beauty_master/presentation/components/error_snackbar.dart';
 import 'package:beauty_master/presentation/components/select_timeslot_sheet.dart';
 import 'package:beauty_master/presentation/models/order_status.dart';
 import 'package:beauty_master/presentation/screens/order_details/bloc/order_details_bloc.dart';
 import 'package:beauty_master/presentation/util/bloc_single_change_listener.dart';
+import 'package:beauty_master/presentation/util/image_util.dart';
+import 'package:beauty_master/presentation/util/phone_formatter.dart';
 import 'package:beauty_master/presentation/util/price_utils.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+part 'client_profile_info.dart';
 part 'order_info_item.dart';
 part 'order_time_info.dart';
 
@@ -111,6 +116,10 @@ class _OrderDetailsWidgetState extends State<OrderDetailsWidget> {
                                                         ),
                                                       ),
                                                     ),
+                                                    if (state.order?.user != null) ...[
+                                                      Divider(),
+                                                      _ClientProfileInfo(state.order!.user!),
+                                                    ],
                                                   ],
                                                 ),
                                               ),

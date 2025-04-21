@@ -15,4 +15,6 @@ abstract interface class AuthRepository {
   Future<StaffProfile> fetchProfile();
 
   Future<StaffProfile> getProfile();
+
+  Stream<StaffProfile?> watchProfile();
 }
