@@ -31,6 +31,9 @@ class OrdersBloc extends Bloc<OrdersEvent, OrdersState> with SubscriptionBloc {
       }
     }, transformer: restartable());
     on<_SelectedDayChanged>((event, emit) {
+      if (state.selectedMonth.month != event.day.month) {
+        add(OrdersEvent.selectedMonthChanged(event.day));
+      }
       emit(state.copyWith(selectedDate: event.day));
       add(OrdersEvent.ordersRequested(refresh: true));
     });

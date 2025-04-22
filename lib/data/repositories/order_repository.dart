@@ -1,9 +1,14 @@
 import 'package:beauty_master/data/api/beauty_client.dart';
 import 'package:beauty_master/data/event/order_changed_event_bus.dart';
+import 'package:beauty_master/data/mappers/time_interval_mapper.dart';
 import 'package:beauty_master/data/models/requests/update_record_request.dart';
 import 'package:beauty_master/domain/models/calendar_day_status.dart';
+import 'package:beauty_master/domain/models/day_schedule.dart';
 import 'package:beauty_master/domain/models/order.dart';
+import 'package:beauty_master/domain/models/workload_order_info.dart';
+import 'package:beauty_master/domain/models/workload_time_slot.dart';
 import 'package:beauty_master/domain/repositories/order_repository.dart';
+import 'package:uuid/uuid.dart';
 
 class OrderRepositoryImpl implements OrderRepository {
   final BeautyClient _client;
@@ -35,6 +40,33 @@ class OrderRepositoryImpl implements OrderRepository {
       monthStatus[workload.day] = workload.status;
     }
     return monthStatus;
+  }
+
+  @override
+  Future<DaySchedule> getDaySchedule(DateTime date) async {
+    final year = date.year;
+    final monthNumber = date.month;
+    final day = date.day;
+    final dto = await _client.getDaySchedule(year, monthNumber, day);
+    return DaySchedule(
+      timeSlotId: dto.timeSlotId,
+      workload:
+          dto.workload
+              .map(
+                (e) => switch (e.recordInfo) {
+                  null => WorkloadTimeSlot.freeTime(
+                    id: const Uuid().v4(),
+                    timeInterval: TimeIntervalMapper.fromDto(e.interval, date),
+                  ),
+                  WorkloadOrderInfo recordInfo => WorkloadTimeSlot.record(
+                    id: const Uuid().v4(),
+                    timeInterval: TimeIntervalMapper.fromDto(e.interval, date),
+                    recordInfo: recordInfo,
+                  ),
+                },
+              )
+              .toList(),
+    );
   }
 
   @override

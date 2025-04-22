@@ -1,8 +1,10 @@
+import 'package:beauty_master/data/models/dto/day_schedule_dto.dart';
 import 'package:beauty_master/data/models/dto/staff_time_slot_dto.dart';
 import 'package:beauty_master/data/models/dto/workload_dto.dart';
 import 'package:beauty_master/data/models/requests/send_code_request.dart';
 import 'package:beauty_master/data/models/requests/send_phone_request.dart';
 import 'package:beauty_master/data/models/requests/update_record_request.dart';
+import 'package:beauty_master/data/models/requests/update_staff_request.dart';
 import 'package:beauty_master/domain/models/auth.dart';
 import 'package:beauty_master/domain/models/order.dart';
 import 'package:beauty_master/domain/models/staff_profile.dart';
@@ -37,6 +39,9 @@ abstract class BeautyClient {
   @GET('/staff/schedule/workload/{year}/{month}')
   Future<List<WorkloadDto>> getWorkload(@Path('year') int year, @Path('month') int month);
 
+  @GET('/staff/schedule/workload/{year}/{month}/{day}')
+  Future<DayScheduleDto> getDaySchedule(@Path('year') int year, @Path('month') int month, @Path('day') int day);
+
   @PATCH('/staff/record')
   Future<void> updateOrder(@Body() UpdateRecordRequest request);
 
@@ -45,4 +50,7 @@ abstract class BeautyClient {
     @Path('id') required String staffId,
     @Query('venueId') required String venueId,
   });
+
+  @PATCH('/staff')
+  Future<void> updateStaff(@Body() UpdateStaffRequest request);
 }

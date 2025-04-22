@@ -1,5 +1,9 @@
 import 'package:auto_route/annotations.dart';
+import 'package:beauty_master/presentation/screens/calendar/bloc/calendar_bloc.dart';
+import 'package:beauty_master/presentation/screens/calendar/widget/calendar_widget.dart';
+import 'package:calendar_view/calendar_view.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 
 @RoutePage()
 class CalendarScreen extends StatelessWidget {
@@ -7,6 +11,12 @@ class CalendarScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const Placeholder();
+    return CalendarControllerProvider(
+      controller: EventController(),
+      child: BlocProvider(
+        create: (context) => CalendarBloc(context.read())..add(CalendarEvent.started()),
+        child: CalendarWidget(),
+      ),
+    );
   }
 }

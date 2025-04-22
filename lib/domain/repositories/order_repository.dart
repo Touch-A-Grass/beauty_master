@@ -1,4 +1,5 @@
 import 'package:beauty_master/domain/models/calendar_day_status.dart';
+import 'package:beauty_master/domain/models/day_schedule.dart';
 import 'package:beauty_master/domain/models/order.dart';
 
 abstract interface class OrderRepository {
@@ -17,4 +18,6 @@ abstract interface class OrderRepository {
   Future<void> changeOrderTime({required String id, required DateTime time, required DateTime endTime});
 
   Stream<Order> watchOrderChangedEvent();
+
+  Future<DaySchedule> getDaySchedule(DateTime date);
 }

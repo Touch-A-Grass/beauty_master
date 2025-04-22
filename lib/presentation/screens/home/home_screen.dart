@@ -20,7 +20,7 @@ class _HomeScreenState extends State<HomeScreen> {
     return AppOverlay(
       child: AutoTabsRouter.pageView(
         physics: NeverScrollableScrollPhysics(),
-        homeIndex: 0,
+        homeIndex: 1,
         builder:
             (context, child, pageController) => Scaffold(
               body: Stack(

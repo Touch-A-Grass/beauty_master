@@ -39,6 +39,11 @@ dependencies:
   mask_text_input_formatter: ^2.9.0
   google_fonts: ^6.2.1
   bloc_concurrency: ^0.3.0
+  calendar_view: ^1.4.0
+  two_dimensional_scrollables: ^0.3.3
+  uuid: ^4.5.1
+  crop_your_image: ^2.0.0
+  image_picker: ^1.1.2
 
 dev_dependencies:
   flutter_test:

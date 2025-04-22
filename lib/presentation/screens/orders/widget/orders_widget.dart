@@ -14,6 +14,7 @@ import 'package:beauty_master/presentation/util/string_util.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
+import 'package:sliver_tools/sliver_tools.dart';
 
 part 'order_calendar.dart';
 part 'order_list_item.dart';
@@ -65,45 +66,72 @@ class _OrdersWidgetState extends State<OrdersWidget> {
                           ),
                         ),
                       ),
-                      if (state.isLoadingOrders && state.orders.data.isEmpty)
-                        const SliverFillRemaining(
-                          hasScrollBody: false,
-                          child: Center(child: CircularProgressIndicator()),
-                        )
-                      else if (!state.isLoadingOrders && state.orders.data.isEmpty)
-                        SliverFillRemaining(
-                          hasScrollBody: false,
-                          child: Center(child: Text(S.of(context).noRecordsForSelectedDay)),
-                        )
-                      else
-                        SliverPadding(
-                          padding:
-                              const EdgeInsets.all(16) + EdgeInsets.only(bottom: MediaQuery.of(context).padding.bottom),
-                          sliver: SliverMainAxisGroup(
-                            slivers: [
-                              SliverToBoxAdapter(
-                                child: Text(
-                                  selectedDateFormat.format(state.selectedDate),
-                                  style: Theme.of(context).textTheme.titleLarge,
-                                ),
+                      SliverMainAxisGroup(
+                        slivers: [
+                          SliverPinnedHeader(
+                            child: Container(
+                              padding: EdgeInsets.all(16),
+                              decoration: BoxDecoration(color: Theme.of(context).colorScheme.surface),
+                              child: Row(
+                                children: [
+                                  IconButton(
+                                    onPressed:
+                                        () => context.read<OrdersBloc>().add(
+                                          OrdersEvent.selectedDayChanged(
+                                            state.selectedDate.subtract(const Duration(days: 1)),
+                                          ),
+                                        ),
+                                    icon: const Icon(Icons.arrow_left_rounded),
+                                  ),
+                                  Expanded(
+                                    child: Text(
+                                      selectedDateFormat.format(state.selectedDate),
+                                      style: Theme.of(context).textTheme.titleLarge,
+                                      textAlign: TextAlign.center,
+                                    ),
+                                  ),
+                                  IconButton(
+                                    onPressed:
+                                        () => context.read<OrdersBloc>().add(
+                                          OrdersEvent.selectedDayChanged(
+                                            state.selectedDate.add(const Duration(days: 1)),
+                                          ),
+                                        ),
+                                    icon: const Icon(Icons.arrow_right_rounded),
+                                  ),
+                                ],
                               ),
-                              SliverPadding(
-                                padding: const EdgeInsets.only(top: 16),
-                                sliver: SliverList.separated(
-                                  itemBuilder:
-                                      (context, index) => _OrderListItem(
-                                        order: state.orders.data[index],
-                                        onTap: () {
-                                          context.pushRoute(OrderDetailsRoute(orderId: state.orders.data[index].id));
-                                        },
-                                      ),
-                                  separatorBuilder: (context, index) => const SizedBox(height: 16),
-                                  itemCount: state.orders.data.length,
-                                ),
-                              ),
-                            ],
+                            ),
                           ),
-                        ),
+                          if (state.isLoadingOrders && state.orders.data.isEmpty)
+                            const SliverFillRemaining(
+                              hasScrollBody: false,
+                              child: Center(child: CircularProgressIndicator()),
+                            )
+                          else if (!state.isLoadingOrders && state.orders.data.isEmpty)
+                            SliverFillRemaining(
+                              hasScrollBody: false,
+                              child: Center(child: Text(S.of(context).noRecordsForSelectedDay)),
+                            )
+                          else
+                            SliverPadding(
+                              padding:
+                                  const EdgeInsets.only(left: 16, right: 16, bottom: 16) +
+                                  EdgeInsets.only(bottom: MediaQuery.of(context).padding.bottom),
+                              sliver: SliverList.separated(
+                                itemBuilder:
+                                    (context, index) => _OrderListItem(
+                                      order: state.orders.data[index],
+                                      onTap: () {
+                                        context.pushRoute(OrderDetailsRoute(orderId: state.orders.data[index].id));
+                                      },
+                                    ),
+                                separatorBuilder: (context, index) => const SizedBox(height: 16),
+                                itemCount: state.orders.data.length,
+                              ),
+                            ),
+                        ],
+                      ),
                     ],
                   ),
                 ),

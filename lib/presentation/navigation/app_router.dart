@@ -14,6 +14,7 @@ class AppRouter extends RootStackRouter {
   List<AutoRoute> get routes => [
     AutoRoute(page: AuthRoute.page, path: '/auth'),
     AutoRoute(page: OrderDetailsRoute.page, path: '/orders/:orderId', usesPathAsKey: true),
+    AutoRoute(page: ImageCropRoute.page, path: '/image-crop'),
     AutoRoute(
       page: mainShellRoute,
       initial: true,

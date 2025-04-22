@@ -1,6 +1,10 @@
+import 'dart:convert';
+import 'dart:typed_data';
+
 import 'package:beauty_master/data/api/beauty_client.dart';
 import 'package:beauty_master/data/models/requests/send_code_request.dart';
 import 'package:beauty_master/data/models/requests/send_phone_request.dart';
+import 'package:beauty_master/data/models/requests/update_staff_request.dart';
 import 'package:beauty_master/data/storage/auth_storage.dart';
 import 'package:beauty_master/data/storage/profile_storage.dart';
 import 'package:beauty_master/domain/models/auth.dart';
@@ -52,4 +56,14 @@ class AuthRepositoryImpl implements AuthRepository {
 
   @override
   Stream<StaffProfile?> watchProfile() => _profileStorage.stream;
+
+  @override
+  Future<void> updateName(String name) async {
+    await _api.updateStaff(UpdateStaffRequest(staffId: (await getProfile()).id, name: name));
+  }
+
+  @override
+  Future<void> updatePhoto(Uint8List photo) async {
+    await _api.updateStaff(UpdateStaffRequest(staffId: (await getProfile()).id, photo: base64Encode(photo)));
+  }
 }

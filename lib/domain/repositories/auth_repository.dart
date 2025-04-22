@@ -1,3 +1,5 @@
+import 'dart:typed_data';
+
 import 'package:beauty_master/domain/models/auth.dart';
 import 'package:beauty_master/domain/models/staff_profile.dart';
 
@@ -17,4 +19,8 @@ abstract interface class AuthRepository {
   Future<StaffProfile> getProfile();
 
   Stream<StaffProfile?> watchProfile();
+
+  Future<void> updateName(String name);
+
+  Future<void> updatePhoto(Uint8List photo);
 }
