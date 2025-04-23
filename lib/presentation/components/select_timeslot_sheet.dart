@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import 'package:auto_route/auto_route.dart';
 import 'package:beauty_master/domain/models/service.dart';
 import 'package:beauty_master/domain/models/staff_time_slot.dart';
@@ -41,7 +43,7 @@ class _SelectTimeslotSheetState extends State<SelectTimeslotSheet> {
 
     var dateTime = modifiedTimeSlots.firstOrNull?.date ?? DateTime.now();
 
-    if (dateTime.month != DateTime.now().month) dateTime = dateTime.copyWith(day: 1);
+    dateTime = dateTime.subtract(Duration(days: min(2, dateTime.day - 1)));
 
     for (int i = 0; i < 365; i++) {
       final t = dateTime.add(Duration(days: i));
