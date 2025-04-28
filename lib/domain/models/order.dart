@@ -1,3 +1,4 @@
+import 'package:beauty_master/domain/models/order_review.dart';
 import 'package:beauty_master/domain/models/service.dart';
 import 'package:beauty_master/domain/models/staff.dart';
 import 'package:beauty_master/domain/models/user.dart';
@@ -21,6 +22,7 @@ class Order with _$Order {
     required DateTime endTimestamp,
     @Default('') String comment,
     @Default(OrderStatus.pending) OrderStatus status,
+    OrderReview? review,
   }) = _Order;
 
   factory Order.fromJson(Map<String, dynamic> json) => _$OrderFromJson(json);

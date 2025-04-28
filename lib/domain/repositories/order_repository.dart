@@ -19,5 +19,5 @@ abstract interface class OrderRepository {
 
   Stream<Order> watchOrderChangedEvent();
 
-  Future<DaySchedule> getDaySchedule(DateTime date);
+  Future<List<DaySchedule>> getDaySchedule(DateTime date);
 }

@@ -3,13 +3,15 @@ import 'package:beauty_master/domain/models/workload_order_info.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
 
 part 'workload_time_slot.freezed.dart';
-
 part 'workload_time_slot.g.dart';
 
 @freezed
 sealed class WorkloadTimeSlot with _$WorkloadTimeSlot {
-  const factory WorkloadTimeSlot.freeTime({required String id, required TimeInterval timeInterval}) =
-      FreeTimeWorkloadTimeSlot;
+  const factory WorkloadTimeSlot.freeTime({
+    required String id,
+    required TimeInterval timeInterval,
+    required String venueId,
+  }) = FreeTimeWorkloadTimeSlot;
 
   const factory WorkloadTimeSlot.record({
     required String id,

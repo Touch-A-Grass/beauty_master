@@ -14,6 +14,7 @@ class Venue with _$Venue {
     @Default('') String description,
     @Default(VenueThemeConfig()) VenueThemeConfig theme,
     @Default([]) List<String> photos,
+    @Default('') String address,
   }) = _Venue;
 
   factory Venue.fromJson(Map<String, dynamic> json) => _$VenueFromJson(json);

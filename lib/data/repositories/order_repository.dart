@@ -43,30 +43,36 @@ class OrderRepositoryImpl implements OrderRepository {
   }
 
   @override
-  Future<DaySchedule> getDaySchedule(DateTime date) async {
+  Future<List<DaySchedule>> getDaySchedule(DateTime date) async {
     final year = date.year;
     final monthNumber = date.month;
     final day = date.day;
-    final dto = await _client.getDaySchedule(year, monthNumber, day);
-    return DaySchedule(
-      timeSlotId: dto.timeSlotId,
-      workload:
-          dto.workload
-              .map(
-                (e) => switch (e.recordInfo) {
-                  null => WorkloadTimeSlot.freeTime(
-                    id: const Uuid().v4(),
-                    timeInterval: TimeIntervalMapper.fromDto(e.interval, date),
-                  ),
-                  WorkloadOrderInfo recordInfo => WorkloadTimeSlot.record(
-                    id: const Uuid().v4(),
-                    timeInterval: TimeIntervalMapper.fromDto(e.interval, date),
-                    recordInfo: recordInfo,
-                  ),
-                },
-              )
-              .toList(),
-    );
+    final response = await _client.getDaySchedule(year, monthNumber, day);
+    return response
+        .map(
+          (dto) => DaySchedule(
+            timeSlotId: dto.timeSlotId,
+            venueId: dto.venueId,
+            workload:
+                dto.workload
+                    .map(
+                      (e) => switch (e.recordInfo) {
+                        null => WorkloadTimeSlot.freeTime(
+                          venueId: dto.venueId,
+                          id: const Uuid().v4(),
+                          timeInterval: TimeIntervalMapper.fromDto(e.interval, date),
+                        ),
+                        WorkloadOrderInfo recordInfo => WorkloadTimeSlot.record(
+                          id: const Uuid().v4(),
+                          timeInterval: TimeIntervalMapper.fromDto(e.interval, date),
+                          recordInfo: recordInfo,
+                        ),
+                      },
+                    )
+                    .toList(),
+          ),
+        )
+        .toList();
   }
 
   @override

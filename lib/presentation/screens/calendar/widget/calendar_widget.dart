@@ -1,13 +1,21 @@
 import 'package:auto_route/auto_route.dart';
+import 'package:beauty_master/domain/models/day_schedule.dart';
+import 'package:beauty_master/domain/models/time_interval.dart';
 import 'package:beauty_master/domain/models/workload_time_slot.dart';
+import 'package:beauty_master/presentation/components/measure_size.dart';
+import 'package:beauty_master/presentation/components/transparent_pointer.dart';
 import 'package:beauty_master/presentation/models/order_status.dart';
 import 'package:beauty_master/presentation/navigation/app_router.gr.dart';
 import 'package:beauty_master/presentation/screens/calendar/bloc/calendar_bloc.dart';
+import 'package:beauty_master/presentation/screens/calendar/time_slot_edit/time_slot_edit_sheet.dart';
+import 'package:beauty_master/presentation/util/date_time_util.dart';
 import 'package:beauty_master/presentation/util/string_util.dart';
-import 'package:calendar_view/calendar_view.dart';
+import 'package:collection/collection.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
+
+part 'schedule_calendar.dart';
 
 class CalendarWidget extends StatefulWidget {
   const CalendarWidget({super.key});
@@ -17,107 +25,124 @@ class CalendarWidget extends StatefulWidget {
 }
 
 class _CalendarWidgetState extends State<CalendarWidget> {
-  final calendarController = EventController();
   dynamic selectedTimeSlot;
+
+  DateTime selectedWeek = DateTime.now();
+  final titleFormat = DateFormat('MMMM');
+
+  double bottomSize = 0;
+
+  TimeInterval? currentInterval;
 
   @override
   Widget build(BuildContext context) {
-    return BlocListener<CalendarBloc, CalendarState>(
-      listenWhen: (prev, curr) => prev.schedule != curr.schedule,
-      listener: (context, state) {
-        calendarController.removeWhere((e) => true);
-        for (final day in state.schedule.keys) {
-          final workloads = state.schedule[day]!.workload;
-          calendarController.addAll(
-            workloads
-                .map(
-                  (e) => CalendarEventData(
-                    date: day,
-                    title: '',
-                    event: e,
-                    startTime: e.timeInterval.start,
-                    endTime: e.timeInterval.end,
-                    color: switch (e) {
-                      FreeTimeWorkloadTimeSlot() => Colors.grey,
-                      RecordWorkloadTimeSlot slot =>  slot.recordInfo.status.color(),
-                    },
-                  ),
-                )
-                .toList(),
-          );
-        }
-      },
-      child: BlocBuilder<CalendarBloc, CalendarState>(
-        builder:
-            (context, state) => Scaffold(
-              appBar: AppBar(title: Text('График работы')),
-              body: Stack(
-                children: [
-                  WeekView(
-                    headerStringBuilder: (date, {secondaryDate}) {
-                      final format = DateFormat('dd.MM.yyyy');
-                      if (secondaryDate == null) return format.format(date);
-                      return '${format.format(date)} - ${format.format(secondaryDate)}';
-                    },
-                    pageViewPhysics: NeverScrollableScrollPhysics(),
-                    weekDayStringBuilder: (date) => getWeekdayName(date + 1, 'EE').capitalize(),
-                    onEventTap: (event, date) {
-                      final e = event.firstOrNull?.event;
-                      if (e == null) return;
+    return BlocBuilder<CalendarBloc, CalendarState>(
+      builder:
+          (context, state) => Scaffold(
+            appBar: AppBar(
+              title: Text(titleFormat.format(selectedWeek).capitalize()),
+              centerTitle: true,
+              elevation: 0,
+              scrolledUnderElevation: 0,
+              shape: Border(),
+            ),
+            body: Stack(
+              children: [
+                ScheduleCalendar(
+                  currentInterval: currentInterval,
+                  isLoading: state.isLoading,
+                  currentIntervalChanged: (value) {
+                    if (state.isLoading) return;
+                    setState(() {
+                      currentInterval = value;
+                    });
+                  },
+                  startDate: DateTime.now().dateOnly,
+                  onWeekSelected:
+                      (week) => setState(() {
+                        selectedWeek = week;
+                        context.read<CalendarBloc>().add(CalendarEvent.scheduleRequested(week));
+                      }),
+                  schedule: state.schedule,
+                  selectedWorkLoad: selectedTimeSlot,
+                  onWorkloadSelected: (workload) {
+                    if (state.isLoading) return;
+                    setState(() {
+                      selectedTimeSlot = workload;
+                    });
+                  },
+                  bottomPadding: bottomSize,
+                ),
+                Positioned(
+                  left: 0,
+                  right: 0,
+                  bottom: MediaQuery.of(context).padding.bottom,
+                  child: MeasureSize(
+                    onChange: (size) {
                       setState(() {
-                        selectedTimeSlot = e;
+                        bottomSize = size.height;
                       });
                     },
-                    headerStyle: HeaderStyle(
-                      headerTextStyle: TextStyle(color: Theme.of(context).colorScheme.onPrimaryContainer),
-                      decoration: BoxDecoration(color: Theme.of(context).colorScheme.primaryContainer),
-                      leftIconConfig: IconDataConfig(color: Theme.of(context).colorScheme.onPrimaryContainer),
-                      rightIconConfig: IconDataConfig(color: Theme.of(context).colorScheme.onPrimaryContainer),
-                    ),
-                    controller: calendarController,
-                    backgroundColor: Theme.of(context).colorScheme.surface,
-                    onPageChange: (DateTime date, int index) {
-                      context.read<CalendarBloc>().add(CalendarEvent.scheduleRequested(date));
+                    child: switch (selectedTimeSlot) {
+                      RecordWorkloadTimeSlot() => RecordInfoSheet(
+                        timeSlot: selectedTimeSlot,
+                        onClose:
+                            () => setState(() {
+                              selectedTimeSlot = null;
+                              currentInterval = null;
+                            }),
+                      ),
+                      FreeTimeWorkloadTimeSlot s => TimeSlotEditSheet(
+                        timeSlot: s,
+                        newInterval: currentInterval,
+                        onConfirm: (venueId) {
+                          if (currentInterval != null) {
+                            context.read<CalendarBloc>().add(
+                              CalendarEvent.timeSlotEdited(timeSlot: s, interval: currentInterval!),
+                            );
+                          }
+                          setState(() {
+                            currentInterval = null;
+                            selectedTimeSlot = null;
+                          });
+                        },
+                        onDelete: () {
+                          context.read<CalendarBloc>().add(CalendarEvent.timeSlotRemoved(timeSlot: s));
+                        },
+                        onClose:
+                            () => setState(() {
+                              currentInterval = null;
+                              selectedTimeSlot = null;
+                            }),
+                      ),
+                      _ =>
+                        currentInterval != null
+                            ? TimeSlotEditSheet(
+                              onConfirm: (venueId) {
+                                if (currentInterval != null) {
+                                  context.read<CalendarBloc>().add(
+                                    CalendarEvent.timeSlotAdded(interval: currentInterval!, venueId: venueId),
+                                  );
+                                }
+                                setState(() {
+                                  currentInterval = null;
+                                  selectedTimeSlot = null;
+                                });
+                              },
+                              newInterval: currentInterval,
+                              onClose:
+                                  () => setState(() {
+                                    currentInterval = null;
+                                    selectedTimeSlot = null;
+                                  }),
+                            )
+                            : const SizedBox.shrink(),
                     },
-                    eventTileBuilder:
-                        (
-                          DateTime date,
-                          List<CalendarEventData> events,
-                          Rect boundary,
-                          DateTime startDuration,
-                          DateTime endDuration,
-                        ) => Container(
-                          decoration: BoxDecoration(
-                            color: events.firstOrNull?.color,
-                            borderRadius: BorderRadius.circular(8),
-                            border:
-                                selectedTimeSlot?.id == (events.firstOrNull?.event as WorkloadTimeSlot).id.toString()
-                                    ? Border.all(color: Theme.of(context).colorScheme.outline, width: 2)
-                                    : null,
-                          ),
-                        ),
                   ),
-                  if (selectedTimeSlot != null)
-                    Positioned(
-                      left: 0,
-                      right: 0,
-                      bottom: 0,
-                      child: switch (selectedTimeSlot) {
-                        RecordWorkloadTimeSlot() => RecordInfoSheet(
-                          timeSlot: selectedTimeSlot,
-                          onClose: () => setState(() => selectedTimeSlot = null),
-                        ),
-                        FreeTimeWorkloadTimeSlot s => TimeSlotEditSheet(
-                          timeSlot: s,
-                          onClose: () => setState(() => selectedTimeSlot = null),
-                        ),
-                        _ => const SizedBox(),
-                      },
-                    ),
-                ],
-              ),
+                ),
+              ],
             ),
-      ),
+          ),
     );
   }
 }
@@ -138,7 +163,7 @@ class _RecordInfoSheetState extends State<RecordInfoSheet> {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: EdgeInsets.only(bottom: MediaQuery.of(context).padding.bottom) + EdgeInsets.all(16),
+      padding: EdgeInsets.all(16),
       child: DecoratedBox(
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(8),
@@ -222,103 +247,4 @@ class _RecordInfoSheetState extends State<RecordInfoSheet> {
       ),
     );
   }
-}
-
-class TimeSlotEditSheet extends StatefulWidget {
-  final FreeTimeWorkloadTimeSlot timeSlot;
-  final VoidCallback onClose;
-
-  const TimeSlotEditSheet({super.key, required this.timeSlot, required this.onClose});
-
-  @override
-  State<TimeSlotEditSheet> createState() => _TimeSlotEditSheetState();
-}
-
-class _TimeSlotEditSheetState extends State<TimeSlotEditSheet> {
-  final startHoursController = TextEditingController();
-  final startMinutesController = TextEditingController();
-  final endHoursController = TextEditingController();
-  final endMinutesController = TextEditingController();
-
-  void _initTime() {
-    startHoursController.text = widget.timeSlot.timeInterval.start.hour.toString().padLeft(2, '0');
-    startMinutesController.text = widget.timeSlot.timeInterval.start.minute.toString().padLeft(2, '0');
-    endHoursController.text = widget.timeSlot.timeInterval.end.hour.toString().padLeft(2, '0');
-    endMinutesController.text = widget.timeSlot.timeInterval.end.minute.toString().padLeft(2, '0');
-  }
-
-  @override
-  void didUpdateWidget(covariant TimeSlotEditSheet oldWidget) {
-    if (oldWidget.timeSlot != widget.timeSlot) _initTime();
-    super.didUpdateWidget(oldWidget);
-  }
-
-  @override
-  void initState() {
-    _initTime();
-    super.initState();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: EdgeInsets.only(bottom: MediaQuery.of(context).padding.bottom) + EdgeInsets.all(16),
-      child: Container(
-        padding: EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          color: Theme.of(context).colorScheme.surfaceContainer,
-          borderRadius: BorderRadius.circular(16),
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Row(
-              children: [
-                Expanded(child: Text('Время работы', style: Theme.of(context).textTheme.titleLarge)),
-                IconButton(onPressed: widget.onClose, icon: const Icon(Icons.delete_rounded)),
-              ],
-            ),
-            const SizedBox(height: 16),
-            Row(
-              children: [
-                Expanded(child: buildTextField(startHoursController)),
-                const SizedBox(width: 4),
-                Text(':'),
-                const SizedBox(width: 4),
-                Expanded(child: buildTextField(startMinutesController)),
-                const SizedBox(width: 8),
-                Text('—'),
-                const SizedBox(width: 8),
-                Expanded(child: buildTextField(endHoursController)),
-                const SizedBox(width: 4),
-                Text(':'),
-                const SizedBox(width: 4),
-                Expanded(child: buildTextField(endMinutesController)),
-              ],
-            ),
-            const SizedBox(height: 16),
-            Row(
-              children: [
-                Expanded(child: OutlinedButton(onPressed: widget.onClose, child: Text('Отменить'))),
-                SizedBox(width: 16),
-                Expanded(child: FilledButton(onPressed: () {}, child: Text('Сохранить'))),
-              ],
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget buildTextField(TextEditingController controller) => TextField(
-    controller: controller,
-    keyboardType: TextInputType.number,
-    maxLength: 2,
-    textAlign: TextAlign.center,
-    buildCounter: (_, {required currentLength, required isFocused, maxLength}) => null,
-    decoration: InputDecoration(
-      border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
-      contentPadding: EdgeInsets.all(4),
-    ),
-  );
 }

@@ -6,7 +6,11 @@ part 'day_schedule.g.dart';
 
 @freezed
 class DaySchedule with _$DaySchedule {
-  const factory DaySchedule({String? timeSlotId, @Default([]) List<WorkloadTimeSlot> workload}) = _DaySchedule;
+  const factory DaySchedule({
+    String? timeSlotId,
+    @Default([]) List<WorkloadTimeSlot> workload,
+    required String venueId,
+  }) = _DaySchedule;
 
   factory DaySchedule.fromJson(Map<String, dynamic> json) => _$DayScheduleFromJson(json);
 }

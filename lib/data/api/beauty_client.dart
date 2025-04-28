@@ -1,6 +1,8 @@
 import 'package:beauty_master/data/models/dto/day_schedule_dto.dart';
 import 'package:beauty_master/data/models/dto/staff_time_slot_dto.dart';
 import 'package:beauty_master/data/models/dto/workload_dto.dart';
+import 'package:beauty_master/data/models/requests/add_time_slot_request.dart';
+import 'package:beauty_master/data/models/requests/edit_time_slot_request.dart';
 import 'package:beauty_master/data/models/requests/send_code_request.dart';
 import 'package:beauty_master/data/models/requests/send_phone_request.dart';
 import 'package:beauty_master/data/models/requests/update_record_request.dart';
@@ -8,6 +10,7 @@ import 'package:beauty_master/data/models/requests/update_staff_request.dart';
 import 'package:beauty_master/domain/models/auth.dart';
 import 'package:beauty_master/domain/models/order.dart';
 import 'package:beauty_master/domain/models/staff_profile.dart';
+import 'package:beauty_master/domain/models/venue.dart';
 import 'package:dio/dio.dart';
 import 'package:retrofit/retrofit.dart';
 
@@ -40,7 +43,7 @@ abstract class BeautyClient {
   Future<List<WorkloadDto>> getWorkload(@Path('year') int year, @Path('month') int month);
 
   @GET('/staff/schedule/workload/{year}/{month}/{day}')
-  Future<DayScheduleDto> getDaySchedule(@Path('year') int year, @Path('month') int month, @Path('day') int day);
+  Future<List<DayScheduleDto>> getDaySchedule(@Path('year') int year, @Path('month') int month, @Path('day') int day);
 
   @PATCH('/staff/record')
   Future<void> updateOrder(@Body() UpdateRecordRequest request);
@@ -53,4 +56,16 @@ abstract class BeautyClient {
 
   @PATCH('/staff')
   Future<void> updateStaff(@Body() UpdateStaffRequest request);
+
+  @POST('/staff/schedule')
+  Future<void> addStaffTimeSlot(@Body() AddTimeSlotRequest request);
+
+  @PATCH('/staff/schedule')
+  Future<void> editStaffTimeSlot(@Body() EditTimeSlotRequest request);
+
+  @GET('/staff/organization/venues')
+  Future<List<Venue>> getStaffOrganizationVenues();
+
+  @GET('/venue/{id}')
+  Future<Venue> getVenue(@Path('id') String id);
 }

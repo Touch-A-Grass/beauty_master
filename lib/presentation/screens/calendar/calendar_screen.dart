@@ -14,7 +14,7 @@ class CalendarScreen extends StatelessWidget {
     return CalendarControllerProvider(
       controller: EventController(),
       child: BlocProvider(
-        create: (context) => CalendarBloc(context.read())..add(CalendarEvent.started()),
+        create: (context) => CalendarBloc(context.read(), context.read(), context.read())..add(CalendarEvent.started()),
         child: CalendarWidget(),
       ),
     );

@@ -5,12 +5,15 @@ import 'package:beauty_master/data/event/order_changed_event_bus.dart';
 import 'package:beauty_master/data/repositories/auth_repository.dart';
 import 'package:beauty_master/data/repositories/order_repository.dart';
 import 'package:beauty_master/data/repositories/staff_repository.dart';
+import 'package:beauty_master/data/repositories/venue_repository.dart';
 import 'package:beauty_master/data/storage/auth_storage.dart';
 import 'package:beauty_master/data/storage/location_storage.dart';
 import 'package:beauty_master/data/storage/profile_storage.dart';
 import 'package:beauty_master/domain/repositories/auth_repository.dart';
 import 'package:beauty_master/domain/repositories/order_repository.dart';
 import 'package:beauty_master/domain/repositories/staff_repository.dart';
+import 'package:beauty_master/domain/repositories/venue_repository.dart';
+import 'package:beauty_master/domain/use_cases/change_time_slot_use_case.dart';
 import 'package:beauty_master/domain/use_cases/logout_use_case.dart';
 import 'package:beauty_master/presentation/navigation/navigation_state_updater.dart';
 import 'package:flutter/material.dart';
@@ -41,8 +44,11 @@ class Di extends StatelessWidget {
         ),
         RepositoryProvider<OrderRepository>(create: (context) => OrderRepositoryImpl(context.read(), context.read())),
         RepositoryProvider<StaffRepository>(create: (context) => StaffRepositoryImpl(context.read())),
-        //   Logic
+        RepositoryProvider<VenueRepository>(create: (context) => VenueRepositoryImpl(context.read())),
+        //   UseCases
         RepositoryProvider(create: (context) => LogoutUseCase(context.read())),
+        RepositoryProvider(create: (context) => ChangeTimeSlotUseCase(context.read(), context.read())),
+        //   Other
         ChangeNotifierProvider(create: (context) => NavigationStateUpdater(context.read())),
       ],
       child: child,
