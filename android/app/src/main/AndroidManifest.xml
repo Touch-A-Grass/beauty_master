@@ -6,7 +6,7 @@
     <application
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher"
-        android:label="beauty_master">
+        android:label="Beauty Master">
         <activity
             android:name=".MainActivity"
             android:configChanges="orientation|keyboardHidden|keyboard|screenSize|smallestScreenSize|locale|layoutDirection|fontScale|screenLayout|density|uiMode"
@@ -31,6 +31,19 @@
                 <category android:name="android.intent.category.BROWSABLE" />
 
                 <data android:scheme="tagbeautymaster" />
+            </intent-filter>
+
+            <intent-filter android:autoVerify="true">
+                <action android:name="android.intent.action.VIEW" />
+
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+
+                <data android:scheme="http" />
+                <data android:scheme="https" />
+
+                <data android:host="master.tag-beauty.online" />
+                <data android:host="master.tag-beauty.ru" />
             </intent-filter>
 
             <intent-filter>
