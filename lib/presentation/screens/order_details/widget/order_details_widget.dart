@@ -1,11 +1,14 @@
+import 'package:auto_route/auto_route.dart';
 import 'package:beauty_master/domain/models/order.dart';
 import 'package:beauty_master/domain/models/order_review.dart';
 import 'package:beauty_master/domain/models/user.dart';
+import 'package:beauty_master/features/chat/presentation/components/chat_button.dart';
 import 'package:beauty_master/generated/l10n.dart';
 import 'package:beauty_master/presentation/components/error_snackbar.dart';
 import 'package:beauty_master/presentation/components/rating_view.dart';
 import 'package:beauty_master/presentation/components/select_timeslot_sheet.dart';
 import 'package:beauty_master/presentation/models/order_status.dart';
+import 'package:beauty_master/presentation/navigation/app_router.gr.dart';
 import 'package:beauty_master/presentation/screens/order_details/bloc/order_details_bloc.dart';
 import 'package:beauty_master/presentation/util/bloc_single_change_listener.dart';
 import 'package:beauty_master/presentation/util/image_util.dart';
@@ -38,7 +41,18 @@ class _OrderDetailsWidgetState extends State<OrderDetailsWidget> {
       child: BlocBuilder<OrderDetailsBloc, OrderDetailsState>(
         builder:
             (context, state) => Scaffold(
-              appBar: AppBar(title: Text(S.of(context).orderDetailsTitle)),
+              appBar: AppBar(
+                title: Text(S.of(context).orderDetailsTitle),
+                actions: [
+                  if (state.order != null)
+                    ChatButton(
+                      unreadCount: state.order?.unreadMessageCount ?? 0,
+                      onPressed: () {
+                        context.pushRoute(OrderChatRoute(orderId: state.order!.id));
+                      },
+                    ),
+                ],
+              ),
               body: AnimatedSwitcher(
                 duration: const Duration(milliseconds: 250),
                 child:

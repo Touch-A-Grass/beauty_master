@@ -13,7 +13,6 @@ class AppRouter extends RootStackRouter {
   @override
   List<AutoRoute> get routes => [
     AutoRoute(page: AuthRoute.page, path: '/auth'),
-    AutoRoute(page: OrderDetailsRoute.page, path: '/orders/:orderId', usesPathAsKey: true),
     AutoRoute(page: ImageCropRoute.page, path: '/image-crop'),
     AutoRoute(
       page: mainShellRoute,
@@ -29,6 +28,8 @@ class AppRouter extends RootStackRouter {
             AutoRoute(page: ProfileRoute.page, path: 'profile'),
           ],
         ),
+        AutoRoute(page: OrderDetailsRoute.page, path: 'orders/:orderId', usesPathAsKey: true),
+        AutoRoute(page: OrderChatRoute.page, path: 'orders/:orderId/chat', usesPathAsKey: true),
       ],
     ),
   ];

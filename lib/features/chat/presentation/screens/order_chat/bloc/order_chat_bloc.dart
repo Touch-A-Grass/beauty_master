@@ -1,0 +1,170 @@
+import 'dart:async';
+
+import 'package:beauty_master/domain/models/app_error.dart';
+import 'package:beauty_master/domain/models/order.dart';
+import 'package:beauty_master/domain/repositories/auth_repository.dart';
+import 'package:beauty_master/domain/repositories/order_repository.dart';
+import 'package:beauty_master/features/chat/domain/models/chat_event.dart';
+import 'package:beauty_master/features/chat/domain/models/chat_live_event.dart';
+import 'package:beauty_master/features/chat/domain/models/chat_message.dart';
+import 'package:beauty_master/features/chat/domain/models/chat_participant.dart';
+import 'package:beauty_master/presentation/models/loading_state.dart';
+import 'package:flutter/cupertino.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:freezed_annotation/freezed_annotation.dart';
+import 'package:uuid/uuid.dart';
+
+part 'order_chat_bloc.freezed.dart';
+part 'order_chat_event.dart';
+part 'order_chat_state.dart';
+
+class OrderChatBloc extends Bloc<OrderChatEvent, OrderChatState> {
+  final OrderRepository _orderRepository;
+  final AuthRepository _authRepository;
+  final String orderId;
+
+  StreamSubscription? _chatSubscription;
+
+  OrderChatBloc(this._orderRepository, this._authRepository, {required this.orderId}) : super(OrderChatState()) {
+    on<_Started>((event, emit) async {
+      final orderFuture = _orderRepository.getOrder(orderId);
+      final chatFuture = _orderRepository.getChatEvents(orderId);
+      try {
+        final order = await orderFuture;
+        emit(state.copyWith(orderState: LoadingState.success(order)));
+        try {
+          final chatMessagesInfo = await chatFuture;
+          final me = await _authRepository.getProfile();
+          final participants = <String, ChatParticipant>{
+            if (order.staff != null) order.staff!.id: StaffParticipant(order.staff!),
+            if (order.user != null) order.user!.id: UserParticipant(order.user!, isOwner: me.id == order.user!.id),
+            me.id: StaffProfileParticipant(me, isOwner: true),
+          };
+          if (order.user != null) {
+            participants[order.user!.id] = UserParticipant(order.user!, isOwner: me.id == order.user!.id);
+          }
+          emit(state.copyWith(participants: participants));
+          final List<ChatEvent> events = _mapChatInfoList(chatMessagesInfo);
+          emit(state.copyWith(messagesState: LoadingState.success(events)));
+          _chatSubscription?.cancel();
+          _chatSubscription = _orderRepository.watchOrderChatEvents(orderId).listen((event) {
+            switch (event) {
+              case EventReceivedChatLiveEvent e:
+                add(OrderChatEvent.messageReceived(_mapChatInfo(e.event)));
+              case MessageReadChatLiveEvent e:
+                add(OrderChatEvent.messageRead(e.messageId));
+            }
+          });
+
+          add(OrderChatEvent.markAsReadRequested());
+        } catch (e, trace) {
+          debugPrintStack(stackTrace: trace);
+          emit(state.copyWith(messagesState: LoadingState.error(AppError.fromObject(e))));
+        }
+      } catch (e, trace) {
+        debugPrintStack(stackTrace: trace);
+        emit(state.copyWith(orderState: LoadingState.error(AppError.fromObject(e))));
+      }
+    });
+
+    on<_SendMessageRequested>((event, emit) async {
+      emit(state.copyWith(sendingMessageState: SendingState.progress()));
+      try {
+        final messageId = const Uuid().v4();
+        if (state.messagesState is SuccessLoadingState) {
+          final messages = (state.messagesState as SuccessLoadingState<List<ChatEvent>>).data;
+          emit(
+            state.copyWith(
+              messagesState: LoadingState.success([
+                ChatEvent.message(
+                  ChatMessage(
+                    id: messageId,
+                    text: event.message,
+                    createdAt: DateTime.now(),
+                    participant: StaffProfileParticipant(await _authRepository.getProfile(), isOwner: true),
+                    readAt: null,
+                    isRead: false,
+                    isSent: false,
+                  ),
+                ),
+                ...messages,
+              ]),
+            ),
+          );
+        }
+        await _orderRepository.sendChatMessage(orderId: orderId, message: event.message, messageId: messageId);
+        emit(state.copyWith(sendingMessageState: SendingState.initial()));
+      } catch (e) {
+        emit(state.copyWith(sendingMessageState: SendingState.error(AppError.fromObject(e))));
+      }
+    });
+
+    on<_MarkAsReadRequested>((event, emit) {
+      if (state.messagesState is SuccessLoadingState) {
+        final messages = (state.messagesState as SuccessLoadingState<List<ChatEvent>>).data;
+        final toMark =
+            messages
+                .where((e) => e is MessageChatEvent && !e.message.isRead && !e.message.participant.isOwner)
+                .map((e) => (e as MessageChatEvent).message.id)
+                .toList();
+
+        if (toMark.isNotEmpty) {
+          _orderRepository.markAsRead(orderId: orderId, messageIds: toMark);
+        }
+      }
+    });
+
+    on<_MessageRead>((event, emit) {
+      if (state.messagesState is SuccessLoadingState) {
+        final messages =
+            (state.messagesState as SuccessLoadingState<List<ChatEvent>>).data.map((e) {
+              if (e is MessageChatEvent && e.message.id == event.messageId) {
+                return e.copyWith(message: e.message.copyWith(isRead: true));
+              }
+              return e;
+            }).toList();
+
+        emit(state.copyWith(messagesState: LoadingState.success(messages)));
+      }
+    });
+
+    on<_MessageReceived>((event, emit) {
+      switch (state.messagesState) {
+        case SuccessLoadingState<List<ChatEvent>> messages:
+          final ChatEvent message = event.message;
+          final List<ChatEvent> oldMessages =
+              messages.data
+                  .where(
+                    (e) => message is! MessageChatEvent || e is! MessageChatEvent || e.message.id != message.message.id,
+                  )
+                  .toList();
+          emit(state.copyWith(messagesState: LoadingState.success([event.message, ...oldMessages])));
+          add(OrderChatEvent.markAsReadRequested());
+        case ProgressLoadingState<List<ChatEvent>>():
+        case ErrorLoadingState<List<ChatEvent>>():
+      }
+    });
+  }
+
+  @override
+  Future<void> close() async {
+    _chatSubscription?.cancel();
+    super.close();
+  }
+
+  List<ChatEvent> _mapChatInfoList(List<ChatEventInfo> events) => events.map(_mapChatInfo).toList();
+
+  ChatEvent _mapChatInfo(ChatEventInfo e) => switch (e) {
+    MessageChatEventInfo e => ChatEvent.message(
+      ChatMessage(
+        participant: state.participants[e.message.senderId]!,
+        createdAt: e.message.createdAt,
+        readAt: e.message.readAt,
+        isRead: e.message.isRead,
+        text: e.message.text,
+        id: e.message.id,
+      ),
+    ),
+    StatusLogChatEventInfo e => ChatEvent.statusLog(e.log),
+  };
+}

@@ -1,3 +1,4 @@
 {
-  "apiBaseUrl": "https://backend.tag-beauty.online/api"
+  "apiBaseUrl": "https://backend.tag-beauty.online/api",
+  "websocketBaseUrl": "wss://backend.tag-beauty.online"
 }

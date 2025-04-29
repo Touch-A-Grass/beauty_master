@@ -1,9 +1,12 @@
+import 'package:beauty_master/data/models/dto/chat_log_dto.dart';
 import 'package:beauty_master/data/models/dto/day_schedule_dto.dart';
 import 'package:beauty_master/data/models/dto/staff_time_slot_dto.dart';
 import 'package:beauty_master/data/models/dto/workload_dto.dart';
 import 'package:beauty_master/data/models/requests/add_time_slot_request.dart';
 import 'package:beauty_master/data/models/requests/edit_time_slot_request.dart';
+import 'package:beauty_master/data/models/requests/mark_as_read_request.dart';
 import 'package:beauty_master/data/models/requests/send_code_request.dart';
+import 'package:beauty_master/data/models/requests/send_message_request.dart';
 import 'package:beauty_master/data/models/requests/send_phone_request.dart';
 import 'package:beauty_master/data/models/requests/update_record_request.dart';
 import 'package:beauty_master/data/models/requests/update_staff_request.dart';
@@ -68,4 +71,13 @@ abstract class BeautyClient {
 
   @GET('/venue/{id}')
   Future<Venue> getVenue(@Path('id') String id);
+
+  @GET('/record/{recordId}/messages')
+  Future<List<ChatLogDto>> getOrderMessages(@Path('recordId') String orderId);
+
+  @POST('/record/{recordId}/message')
+  Future<List<ChatLogDto>> sendOrderMessage(@Path('recordId') String orderId, @Body() SendMessageRequest request);
+
+  @PATCH('/record/{recordId}/messages')
+  Future<void> markAsRead(@Path('recordId') String orderId, @Body() MarkAsReadRequest request);
 }

@@ -23,12 +23,13 @@ class Order with _$Order {
     @Default('') String comment,
     @Default(OrderStatus.pending) OrderStatus status,
     OrderReview? review,
+    @Default(0) int unreadMessageCount,
   }) = _Order;
 
   factory Order.fromJson(Map<String, dynamic> json) => _$OrderFromJson(json);
 }
 
-@JsonEnum()
+@JsonEnum(alwaysCreate: true)
 enum OrderStatus {
   @JsonValue('Discarded')
   discarded,
@@ -37,5 +38,10 @@ enum OrderStatus {
   @JsonValue('Approved')
   approved,
   @JsonValue('Completed')
-  completed,
+  completed;
+
+  factory OrderStatus.fromJson(dynamic value) =>
+      $enumDecodeNullable(_$OrderStatusEnumMap, value, unknownValue: OrderStatus.pending) ?? OrderStatus.pending;
+
+  String? toJson() => _$OrderStatusEnumMap[this] ?? _$OrderStatusEnumMap[OrderStatus.pending];
 }
