@@ -1,0 +1,79 @@
+name: Create Release, Build APK, deploy to server
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: "3.29.0"
+
+      - name: Install dependencies & config
+        run: |
+          flutter pub get
+          dart run build_runner build --delete-conflicting-outputs
+          dart run intl_utils:generate
+
+      - name: build web
+        run: |
+          flutter build web --release --dart-define-from-file=configs/production.json
+
+      - name: Zip web build
+        run: |
+          cd build
+          zip -r ../web.zip web
+
+      - name: Set up SSH key
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.SERVER_SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+          ssh-keyscan -H ${{ secrets.SERVER_IP }} >> ~/.ssh/known_hosts
+
+      - name: Copy web.zip to server
+        run: |
+          scp -i ~/.ssh/id_rsa -o StrictHostKeyChecking=no web.zip ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }}:/home/${{ secrets.SERVER_USER }}/beauty_master_web/
+
+      - name: Unzip and deploy on server
+        run: |
+          ssh -i ~/.ssh/id_rsa -o StrictHostKeyChecking=no ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }} << 'EOF'
+            cd ~/beauty_master_web
+            rm -rf web/
+            unzip -o web.zip
+            sudo docker-compose down
+            sudo docker system prune -f
+            sudo docker-compose up -d --build
+          EOF
+
+      - name: build apk
+        run: |
+          flutter build apk --release --dart-define-from-file=configs/production.json
+
+      - name: Extract version from pubspec.yaml
+        id: get_version
+        run: |
+          VERSION=$(grep '^version:' pubspec.yaml | sed 's/version: //' | cut -d '+' -f1)
+          echo "VERSION_TAG=v$VERSION" >> $GITHUB_ENV
+          echo "Version: $VERSION"
+      
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: ${{ env.VERSION_TAG }}
+          name: Release ${{ env.VERSION_TAG }}
+          files: build/app/outputs/flutter-apk/app-release.apk
+        env:
+          GITHUB_TOKEN: ${{ secrets.RELEASE_TOKEN }}
