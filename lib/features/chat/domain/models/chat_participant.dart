@@ -31,7 +31,7 @@ class StaffParticipant extends ChatParticipant {
   final Staff staff;
 
   StaffParticipant(this.staff, {super.isOwner})
-      : super(id: staff.id, name: staff.name, initials: staff.initials, avatar: staff.photo);
+    : super(id: staff.id, name: staff.name, initials: staff.initials, avatar: staff.photo);
 }
 
 class StaffProfileParticipant extends ChatParticipant {
@@ -39,4 +39,8 @@ class StaffProfileParticipant extends ChatParticipant {
 
   StaffProfileParticipant(this.staff, {super.isOwner})
     : super(id: staff.id, name: staff.name, initials: staff.initials, avatar: staff.photo);
+}
+
+class UnknownParticipant extends ChatParticipant {
+  UnknownParticipant(String id) : super(id: id, name: 'Unknown', initials: '?', avatar: null);
 }
