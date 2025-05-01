@@ -3,7 +3,6 @@ import 'package:beauty_master/domain/models/day_schedule.dart';
 import 'package:beauty_master/domain/models/time_interval.dart';
 import 'package:beauty_master/domain/models/workload_time_slot.dart';
 import 'package:beauty_master/presentation/components/measure_size.dart';
-import 'package:beauty_master/presentation/components/transparent_pointer.dart';
 import 'package:beauty_master/presentation/models/order_status.dart';
 import 'package:beauty_master/presentation/navigation/app_router.gr.dart';
 import 'package:beauty_master/presentation/screens/calendar/bloc/calendar_bloc.dart';

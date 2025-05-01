@@ -4,6 +4,7 @@ import 'package:beauty_master/domain/models/order_review.dart';
 import 'package:beauty_master/domain/models/user.dart';
 import 'package:beauty_master/features/chat/presentation/components/chat_button.dart';
 import 'package:beauty_master/generated/l10n.dart';
+import 'package:beauty_master/presentation/components/app_back_button.dart';
 import 'package:beauty_master/presentation/components/error_snackbar.dart';
 import 'package:beauty_master/presentation/components/rating_view.dart';
 import 'package:beauty_master/presentation/components/select_timeslot_sheet.dart';
@@ -43,6 +44,7 @@ class _OrderDetailsWidgetState extends State<OrderDetailsWidget> {
             (context, state) => Scaffold(
               appBar: AppBar(
                 title: Text(S.of(context).orderDetailsTitle),
+                leading: AppBackButton(),
                 actions: [
                   if (state.order != null)
                     ChatButton(

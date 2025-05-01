@@ -157,7 +157,7 @@ class OrderChatBloc extends Bloc<OrderChatEvent, OrderChatState> {
   ChatEvent _mapChatInfo(ChatEventInfo e) => switch (e) {
     MessageChatEventInfo e => ChatEvent.message(
       ChatMessage(
-        participant: state.participants[e.message.senderId]!,
+        participant: state.participants[e.message.senderId] ?? UnknownParticipant(e.message.senderId),
         createdAt: e.message.createdAt,
         readAt: e.message.readAt,
         isRead: e.message.isRead,

@@ -2,6 +2,7 @@ import 'dart:math';
 import 'dart:typed_data';
 
 import 'package:auto_route/auto_route.dart';
+import 'package:beauty_master/presentation/components/app_back_button.dart';
 import 'package:crop_your_image/crop_your_image.dart';
 import 'package:flutter/material.dart';
 
@@ -21,7 +22,7 @@ class _ImageCropScreenState extends State<ImageCropScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text('Обрезать изображение')),
+      appBar: AppBar(title: Text('Обрезать изображение'), leading: AppBackButton()),
       body: Stack(
         children: [
           Crop(
@@ -56,7 +57,7 @@ class _ImageCropScreenState extends State<ImageCropScreen> {
                 onPressed: () {
                   controller.crop();
                 },
-                icon: Icon(Icons.check_rounded, size: 32,),
+                icon: Icon(Icons.check_rounded, size: 32),
                 style: ButtonStyle(backgroundColor: WidgetStatePropertyAll(Theme.of(context).colorScheme.surface)),
               ),
             ),
