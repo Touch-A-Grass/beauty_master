@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "783770945837",
+    "project_id": "beatymaster-82227",
+    "storage_bucket": "beatymaster-82227.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:783770945837:android:3075d5df766004d1cb2ba4",
+        "android_client_info": {
+          "package_name": "com.fedkru.beauty_master"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAwkpTn2k5Ph8AbibJSMnUmYy7Ee26WnJY"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

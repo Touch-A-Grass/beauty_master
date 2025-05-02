@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:beauty_master/domain/repositories/auth_repository.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 // import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -25,16 +26,16 @@ class _PushHandlerState extends State<PushHandler> {
     subscription = authRepository.watchAuth().listen((auth) async {
       try {
         if (auth == null) {
-          // await FirebaseMessaging.instance.deleteToken();
+          await FirebaseMessaging.instance.deleteToken();
         } else {
-          // await FirebaseMessaging.instance.requestPermission();
-          // final token = await FirebaseMessaging.instance.getToken(
-          //   vapidKey: 'BKogdkJ_48uzdfhySGKse28l1d47bghqim8I3SR87s5VosvmDXhxnRosnooyaqRgweHm4qVqgEMcHkLrBUFl7SA',
-          // );
-          // debugPrint(token);
-          // if (token != null) {
-          //   await authRepository.sendFirebaseToken(token);
-          // }
+          await FirebaseMessaging.instance.requestPermission();
+          final token = await FirebaseMessaging.instance.getToken(
+            vapidKey: 'BG2dWQHKOEflUhzGR9wl8rt6mNZK3_6vwWmZN4Kc4DhytqgdzXFN5nEcfal1Pe2vmQ4wyQx0gTf8KG_X2rabIAY',
+          );
+          debugPrint(token);
+          if (token != null) {
+            await authRepository.sendFirebaseToken(token);
+          }
         }
       } catch (_) {}
     });

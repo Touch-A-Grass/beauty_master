@@ -23,4 +23,6 @@ abstract interface class AuthRepository {
   Future<void> updateName(String name);
 
   Future<void> updatePhoto(Uint8List photo);
+
+  Future<void> sendFirebaseToken(String token);
 }

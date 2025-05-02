@@ -6,6 +6,7 @@ import 'package:beauty_master/data/models/requests/add_time_slot_request.dart';
 import 'package:beauty_master/data/models/requests/edit_time_slot_request.dart';
 import 'package:beauty_master/data/models/requests/mark_as_read_request.dart';
 import 'package:beauty_master/data/models/requests/send_code_request.dart';
+import 'package:beauty_master/data/models/requests/send_firebase_token_request.dart';
 import 'package:beauty_master/data/models/requests/send_message_request.dart';
 import 'package:beauty_master/data/models/requests/send_phone_request.dart';
 import 'package:beauty_master/data/models/requests/update_record_request.dart';
@@ -31,6 +32,9 @@ abstract class BeautyClient {
 
   @GET('/staff')
   Future<StaffProfile> getProfile();
+
+  @POST('/user/firebase_token')
+  Future<Auth> sendFirebaseToken(@Body() SendFirebaseTokenRequest request);
 
   @GET('/record/{id}')
   Future<Order> getOrder(@Path('id') String id);

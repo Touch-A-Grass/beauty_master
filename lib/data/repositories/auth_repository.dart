@@ -3,6 +3,7 @@ import 'dart:typed_data';
 
 import 'package:beauty_master/data/api/beauty_client.dart';
 import 'package:beauty_master/data/models/requests/send_code_request.dart';
+import 'package:beauty_master/data/models/requests/send_firebase_token_request.dart';
 import 'package:beauty_master/data/models/requests/send_phone_request.dart';
 import 'package:beauty_master/data/models/requests/update_staff_request.dart';
 import 'package:beauty_master/data/storage/auth_storage.dart';
@@ -65,5 +66,10 @@ class AuthRepositoryImpl implements AuthRepository {
   @override
   Future<void> updatePhoto(Uint8List photo) async {
     await _api.updateStaff(UpdateStaffRequest(staffId: (await getProfile()).id, photo: base64Encode(photo)));
+  }
+
+  @override
+  Future<void> sendFirebaseToken(String token) {
+    return _api.sendFirebaseToken(SendFirebaseTokenRequest(token: token));
   }
 }
