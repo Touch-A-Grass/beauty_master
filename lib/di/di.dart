@@ -2,6 +2,7 @@ import 'package:beauty_master/core/config.dart';
 import 'package:beauty_master/data/api/beauty_client.dart';
 import 'package:beauty_master/data/api/dio_factory.dart';
 import 'package:beauty_master/data/event/order_changed_event_bus.dart';
+import 'package:beauty_master/data/event/order_chat_unread_count_changed_event_bus.dart';
 import 'package:beauty_master/data/repositories/auth_repository.dart';
 import 'package:beauty_master/data/repositories/order_repository.dart';
 import 'package:beauty_master/data/repositories/staff_repository.dart';
@@ -35,8 +36,11 @@ class Di extends StatelessWidget {
         //   Storages
         RepositoryProvider.value(value: authStorage),
         RepositoryProvider.value(value: profileStorage),
-        RepositoryProvider(create: (context) => OrderChangedEventBus()),
         RepositoryProvider(create: (context) => LocationStorage()),
+        // Events
+        RepositoryProvider(create: (context) => OrderChangedEventBus()),
+        RepositoryProvider(create: (context) => OrderChatUnreadCountChangedEventBus()),
+        // API
         RepositoryProvider(create: (context) => DioFactory.create(context.read())),
         RepositoryProvider(create: (context) => BeautyClient(context.read(), baseUrl: Config.apiBaseUrl)),
         RepositoryProvider(create: (context) => WebsocketApi(context.read(), baseUrl: Config.websocketBaseUrl)),
@@ -45,7 +49,7 @@ class Di extends StatelessWidget {
           create: (context) => AuthRepositoryImpl(context.read(), context.read(), context.read()),
         ),
         RepositoryProvider<OrderRepository>(
-          create: (context) => OrderRepositoryImpl(context.read(), context.read(), context.read()),
+          create: (context) => OrderRepositoryImpl(context.read(), context.read(), context.read(), context.read()),
         ),
         RepositoryProvider<StaffRepository>(create: (context) => StaffRepositoryImpl(context.read())),
         RepositoryProvider<VenueRepository>(create: (context) => VenueRepositoryImpl(context.read())),

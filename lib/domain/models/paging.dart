@@ -10,6 +10,9 @@ class Paging<T> {
 
   int offset(bool refresh) => refresh ? 0 : data.length;
 
+  Paging<T> copyWith({List<T>? data, bool? hasNext}) =>
+      Paging<T>(data: data ?? this.data, hasNext: hasNext ?? this.hasNext);
+
   Paging<T> replaceWith<K>(T item, K Function(T e) key) {
     final newData = data.toList();
     final index = newData.indexWhere((element) => key(element) == key(item));

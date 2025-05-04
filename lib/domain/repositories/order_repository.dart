@@ -1,3 +1,4 @@
+import 'package:beauty_master/data/event/order_chat_unread_count_changed_event_bus.dart';
 import 'package:beauty_master/domain/models/calendar_day_status.dart';
 import 'package:beauty_master/domain/models/day_schedule.dart';
 import 'package:beauty_master/domain/models/order.dart';
@@ -30,4 +31,8 @@ abstract interface class OrderRepository {
   Stream<ChatLiveEvent> watchOrderChatEvents(String orderId);
 
   Future<void> markAsRead({required String orderId, required List<String> messageIds});
+
+  Stream<int> watchOrderChatUnreadCount(String orderId);
+
+  Stream<OrderChatUnreadCountChangedEvent> watchOrderChatUnreadCountAll();
 }

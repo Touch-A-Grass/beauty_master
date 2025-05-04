@@ -4,6 +4,7 @@ import 'package:beauty_master/domain/models/staff_time_slot.dart';
 import 'package:beauty_master/domain/repositories/auth_repository.dart';
 import 'package:beauty_master/domain/repositories/order_repository.dart';
 import 'package:beauty_master/domain/repositories/staff_repository.dart';
+import 'package:beauty_master/presentation/util/subscription_bloc.dart';
 import 'package:bloc_concurrency/bloc_concurrency.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
@@ -12,7 +13,7 @@ part 'order_details_bloc.freezed.dart';
 part 'order_details_event.dart';
 part 'order_details_state.dart';
 
-class OrderDetailsBloc extends Bloc<OrderDetailsEvent, OrderDetailsState> {
+class OrderDetailsBloc extends Bloc<OrderDetailsEvent, OrderDetailsState> with SubscriptionBloc {
   final OrderRepository _orderRepository;
   final StaffRepository _staffRepository;
   final AuthRepository _authRepository;
@@ -89,5 +90,13 @@ class OrderDetailsBloc extends Bloc<OrderDetailsEvent, OrderDetailsState> {
         emit(state.copyWith(changingTimeSlotState: OrderUpdatingState.error(AppError.fromObject(e))));
       }
     });
+    on<_UnreadCountChanged>((event, emit) {
+      emit(state.copyWith(order: state.order?.copyWith(unreadMessageCount: event.count)));
+    });
+
+    subscribe(
+      _orderRepository.watchOrderChatUnreadCount(orderId),
+      (count) => add(OrderDetailsEvent.unreadCountChanged(count)),
+    );
   }
 }

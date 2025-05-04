@@ -15,4 +15,6 @@ class OrderDetailsEvent with _$OrderDetailsEvent {
   const factory OrderDetailsEvent.timeSlotsRequested() = _TimeSlotsRequested;
 
   const factory OrderDetailsEvent.changeTimeSlotRequested(DateTime date) = _ChangeTimeSlotRequested;
+
+  const factory OrderDetailsEvent.unreadCountChanged(int count) = _UnreadCountChanged;
 }

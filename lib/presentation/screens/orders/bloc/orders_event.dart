@@ -11,4 +11,6 @@ class OrdersEvent with _$OrdersEvent {
   const factory OrdersEvent.selectedMonthChanged(DateTime month) = _SelectedMonthChanged;
 
   const factory OrdersEvent.selectedDayChanged(DateTime day) = _SelectedDayChanged;
+
+  const factory OrdersEvent.unreadMessageCountChanged(String orderId, int count) = _UnreadMessageCountChanged;
 }
