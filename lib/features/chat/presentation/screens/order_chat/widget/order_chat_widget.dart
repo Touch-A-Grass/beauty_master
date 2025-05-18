@@ -25,6 +25,12 @@ class OrderChatWidget extends StatelessWidget {
                           context.read<OrderChatBloc>().add(OrderChatEvent.sendMessageRequested(message));
                         }
                         : null,
+                onSendImage:
+                    state.sendingMessageState is! ProgressSendingState
+                        ? (image) {
+                          context.read<OrderChatBloc>().add(OrderChatEvent.sendImageRequested(image));
+                        }
+                        : null,
               ),
               ErrorLoadingState<List<ChatEvent>> error => Center(child: Text(error.error.message)),
             },

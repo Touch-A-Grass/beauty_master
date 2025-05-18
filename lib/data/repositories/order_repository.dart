@@ -1,3 +1,6 @@
+import 'dart:convert';
+import 'dart:typed_data';
+
 import 'package:beauty_master/data/api/beauty_client.dart';
 import 'package:beauty_master/data/event/order_changed_event_bus.dart';
 import 'package:beauty_master/data/event/order_chat_unread_count_changed_event_bus.dart';
@@ -16,6 +19,7 @@ import 'package:beauty_master/features/chat/data/mappers/chat_event_mapper.dart'
 import 'package:beauty_master/features/chat/data/models/messages/order_chat_socket_message.dart';
 import 'package:beauty_master/features/chat/domain/models/chat_event.dart';
 import 'package:beauty_master/features/chat/domain/models/chat_live_event.dart';
+import 'package:beauty_master/features/chat/domain/models/chat_message.dart';
 import 'package:beauty_master/features/chat/domain/models/chat_message_info.dart';
 import 'package:uuid/uuid.dart';
 
@@ -123,6 +127,11 @@ class OrderRepositoryImpl implements OrderRepository {
   }
 
   @override
+  Future<void> sendChatImage({required String orderId, required Uint8List image, required String messageId}) {
+    return _client.sendOrderMessage(orderId, SendMessageRequest(text: base64Encode(image), messageId: messageId));
+  }
+
+  @override
   Future<void> markAsRead({required String orderId, required List<String> messageIds}) async {
     await _client.markAsRead(orderId, MarkAsReadRequest(messageIds: messageIds));
     _orderChatUnreadCountChangedEventBus.emit(OrderChatUnreadCountChangedEvent(orderId: orderId, count: 0));
@@ -141,7 +150,7 @@ class OrderRepositoryImpl implements OrderRepository {
                   createdAt: message.createdAt.toLocal(),
                   readAt: null,
                   isRead: false,
-                  text: message.message,
+                  content: ChatMessageContent.text(message.message),
                   id: message.messageId,
                 ),
               ),

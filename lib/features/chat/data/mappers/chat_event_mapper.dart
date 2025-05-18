@@ -1,6 +1,7 @@
 import 'package:beauty_master/data/models/dto/chat_log_dto.dart';
 import 'package:beauty_master/domain/models/order.dart';
 import 'package:beauty_master/features/chat/domain/models/chat_event.dart';
+import 'package:beauty_master/features/chat/domain/models/chat_message.dart';
 import 'package:beauty_master/features/chat/domain/models/chat_message_info.dart';
 import 'package:beauty_master/features/chat/domain/models/chat_status_log.dart';
 import 'package:flutter/cupertino.dart';
@@ -14,7 +15,7 @@ class ChatEventInfoMapper {
         'Message' => ChatEventInfo.message(
           ChatMessageInfo(
             id: dto.id!,
-            text: dto.text!,
+            content: ChatMessageContent.text(dto.text!),
             senderId: dto.senderId!,
             createdAt: dto.createdAt!.toLocal(),
             readAt: dto.readAt?.toLocal(),

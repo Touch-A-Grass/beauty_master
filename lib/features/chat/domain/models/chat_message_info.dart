@@ -1,7 +1,7 @@
+import 'package:beauty_master/features/chat/domain/models/chat_message.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
 
 part 'chat_message_info.freezed.dart';
-part 'chat_message_info.g.dart';
 
 @freezed
 sealed class ChatMessageInfo with _$ChatMessageInfo {
@@ -10,9 +10,7 @@ sealed class ChatMessageInfo with _$ChatMessageInfo {
     required DateTime createdAt,
     required DateTime? readAt,
     required bool isRead,
-    required String text,
+    required ChatMessageContent content,
     required String id,
   }) = _ChatMessageInfo;
-
-  factory ChatMessageInfo.fromJson(Map<String, dynamic> json) => _$ChatMessageInfoFromJson(json);
 }

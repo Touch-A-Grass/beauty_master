@@ -1,4 +1,4 @@
 {
-  "apiBaseUrl": "http://26.97.72.15:5094/api",
-  "websocketBaseUrl": "ws://26.97.72.15:5094"
+  "apiBaseUrl": "http://100.64.0.2:5094/api",
+  "websocketBaseUrl": "ws://100.64.0.2:5094"
 }

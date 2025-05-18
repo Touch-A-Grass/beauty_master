@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:typed_data';
 
 import 'package:beauty_master/domain/models/app_error.dart';
 import 'package:beauty_master/domain/models/order.dart';
@@ -7,6 +8,7 @@ import 'package:beauty_master/domain/repositories/order_repository.dart';
 import 'package:beauty_master/features/chat/domain/models/chat_event.dart';
 import 'package:beauty_master/features/chat/domain/models/chat_live_event.dart';
 import 'package:beauty_master/features/chat/domain/models/chat_message.dart';
+import 'package:beauty_master/features/chat/domain/models/chat_message_info.dart';
 import 'package:beauty_master/features/chat/domain/models/chat_participant.dart';
 import 'package:beauty_master/presentation/models/loading_state.dart';
 import 'package:flutter/cupertino.dart';
@@ -73,17 +75,21 @@ class OrderChatBloc extends Bloc<OrderChatEvent, OrderChatState> {
         final messageId = const Uuid().v4();
         if (state.messagesState is SuccessLoadingState) {
           final messages = (state.messagesState as SuccessLoadingState<List<ChatEvent>>).data;
+          final sender = await _authRepository.getProfile();
           emit(
             state.copyWith(
               messagesState: LoadingState.success([
                 ChatEvent.message(
                   ChatMessage(
-                    id: messageId,
-                    text: event.message,
-                    createdAt: DateTime.now(),
-                    participant: StaffProfileParticipant(await _authRepository.getProfile(), isOwner: true),
-                    readAt: null,
-                    isRead: false,
+                    info: ChatMessageInfo(
+                      id: messageId,
+                      content: ChatMessageContent.text(event.message),
+                      createdAt: DateTime.now(),
+                      readAt: null,
+                      isRead: false,
+                      senderId: sender.id,
+                    ),
+                    participant: StaffProfileParticipant(sender, isOwner: true),
                     isSent: false,
                   ),
                 ),
@@ -99,14 +105,51 @@ class OrderChatBloc extends Bloc<OrderChatEvent, OrderChatState> {
       }
     });
 
+    on<_SendImageRequested>((event, emit) async {
+      emit(state.copyWith(sendingMessageState: SendingState.progress()));
+      try {
+        final messageId = const Uuid().v4();
+        if (state.messagesState is SuccessLoadingState) {
+          final messages = (state.messagesState as SuccessLoadingState<List<ChatEvent>>).data;
+          final sender = await _authRepository.getProfile();
+          emit(
+            state.copyWith(
+              messagesState: LoadingState.success([
+                ChatEvent.message(
+                  ChatMessage(
+                    info: ChatMessageInfo(
+                      id: messageId,
+                      content: ChatMessageContent.image(event.image),
+                      createdAt: DateTime.now(),
+                      readAt: null,
+                      isRead: false,
+                      senderId: sender.id,
+                    ),
+                    participant: StaffProfileParticipant(sender, isOwner: true),
+                    isSent: false,
+                  ),
+                ),
+                ...messages,
+              ]),
+            ),
+          );
+        }
+        await _orderRepository.sendChatImage(orderId: orderId, image: event.image, messageId: messageId);
+        emit(state.copyWith(sendingMessageState: SendingState.initial()));
+      } catch (e) {
+        emit(state.copyWith(sendingMessageState: SendingState.error(AppError.fromObject(e))));
+      }
+    });
+
+
     on<_MarkAsReadRequested>((event, emit) {
       if (state.messagesState is SuccessLoadingState) {
         final messages = (state.messagesState as SuccessLoadingState<List<ChatEvent>>).data;
         final toMark =
-            messages
-                .where((e) => e is MessageChatEvent && !e.message.isRead && !e.message.participant.isOwner)
-                .map((e) => (e as MessageChatEvent).message.id)
-                .toList();
+        messages
+            .where((e) => e is MessageChatEvent && !e.message.info.isRead && !e.message.participant.isOwner)
+            .map((e) => (e as MessageChatEvent).message.info.id)
+            .toList();
 
         if (toMark.isNotEmpty) {
           _orderRepository.markAsRead(orderId: orderId, messageIds: toMark);
@@ -118,8 +161,8 @@ class OrderChatBloc extends Bloc<OrderChatEvent, OrderChatState> {
       if (state.messagesState is SuccessLoadingState) {
         final messages =
             (state.messagesState as SuccessLoadingState<List<ChatEvent>>).data.map((e) {
-              if (e is MessageChatEvent && e.message.id == event.messageId) {
-                return e.copyWith(message: e.message.copyWith(isRead: true));
+              if (e is MessageChatEvent && e.message.info.id == event.messageId) {
+                return e.copyWith(message: e.message.copyWith(info: e.message.info.copyWith(isRead: true)));
               }
               return e;
             }).toList();
@@ -135,10 +178,14 @@ class OrderChatBloc extends Bloc<OrderChatEvent, OrderChatState> {
           final List<ChatEvent> oldMessages =
               messages.data
                   .where(
-                    (e) => message is! MessageChatEvent || e is! MessageChatEvent || e.message.id != message.message.id,
+                    (e) =>
+                        message is! MessageChatEvent ||
+                        e is! MessageChatEvent ||
+                        e.message.info.id != message.message.info.id,
                   )
                   .toList();
-          emit(state.copyWith(messagesState: LoadingState.success([event.message, ...oldMessages])));
+          final List<ChatEvent> newMessages = <ChatEvent>[event.message, ...oldMessages];
+          emit(state.copyWith(messagesState: LoadingState.success(newMessages)));
           add(OrderChatEvent.markAsReadRequested());
         case ProgressLoadingState<List<ChatEvent>>():
         case ErrorLoadingState<List<ChatEvent>>():
@@ -157,12 +204,8 @@ class OrderChatBloc extends Bloc<OrderChatEvent, OrderChatState> {
   ChatEvent _mapChatInfo(ChatEventInfo e) => switch (e) {
     MessageChatEventInfo e => ChatEvent.message(
       ChatMessage(
+        info: e.message,
         participant: state.participants[e.message.senderId] ?? UnknownParticipant(e.message.senderId),
-        createdAt: e.message.createdAt,
-        readAt: e.message.readAt,
-        isRead: e.message.isRead,
-        text: e.message.text,
-        id: e.message.id,
       ),
     ),
     StatusLogChatEventInfo e => ChatEvent.statusLog(e.log),

@@ -6,6 +6,8 @@ class OrderChatEvent with _$OrderChatEvent {
 
   const factory OrderChatEvent.sendMessageRequested(String message) = _SendMessageRequested;
 
+  const factory OrderChatEvent.sendImageRequested(Uint8List image) = _SendImageRequested;
+
   const factory OrderChatEvent.messageReceived(ChatEvent message) = _MessageReceived;
 
   const factory OrderChatEvent.messageRead(String messageId) = _MessageRead;
