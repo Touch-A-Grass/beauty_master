@@ -13,7 +13,6 @@ class ChatMessageView extends StatefulWidget {
 class _ChatMessageViewState extends State<ChatMessageView> {
   final dateFormat = DateFormat('HH:mm');
 
-  bool checkedUrl = false;
   bool isImage = true;
 
   Future<bool> validateImage(String imageUrl) async {
@@ -47,16 +46,15 @@ class _ChatMessageViewState extends State<ChatMessageView> {
         context.read<ImageUrlCache>().value = value;
       }
     }
-    if (context.mounted) {
-      setState(() {
-        checkedUrl = true;
-      });
-    }
   }
 
   @override
   void initState() {
-    check(context);
+    final content = widget.message.info.content;
+    isImage =
+    content is TextChatMessageContent
+        ? content.text.contains('beauty-images.storage.yandexcloud.net')
+        : content is ImageChatMessageContent;
     super.initState();
   }
 
